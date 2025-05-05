@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load exam_tags %}
+{% block title %}Welcome to MyStudy App{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Greeting Section -->
+    <section class="mb-12 text-center">
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
+            Welcome, {{ user.username }}!
+        </h1>
+        <p class="text-lg text-gray-600">
+            Your one-stop platform for university resources, study guides, and performance tracking.
+        </p>
+    </section>
+
+    <!-- Features Section -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- PDFs -->
+        <a href="{% url 'exams:materials' %}" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
+            <div class="flex items-center mb-4">
+                <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                    </path>
+                </svg>
+                <h2 class="text-xl font-semibold text-gray-800">Study Materials</h2>
+            </div>
+            <p class="text-gray-600">Access a wide range of PDFs and study resources tailored for your courses.</p>
+        </a>
+
+        <!-- Past Questions -->
+        <a href="{% url 'exams:past_questions' %}" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
+            <div class="flex items-center mb-4">
+                <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                    </path>
+                </svg>
+                <h2 class="text-xl font-semibold text-gray-800">Past Questions</h2>
+            </div>
+            <p class="text-gray-600">Practice with past exam questions to prepare effectively for your assessments.</p>
+        </a>
+
+        <!-- CBT Practice -->
+        {% get_exam_course_id user as exam_course_id %}
+        {% if exam_course_id %}
+        <a href="{% url 'exams:available_exams' course_id=exam_course_id %}"
+            class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
+            <div class="flex items-center mb-4">
+                <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h2 class="text-xl font-semibold text-gray-800">CBT Practice</h2>
+            </div>
+            <p class="text-gray-600">Engage in computer-based tests to simulate real exam conditions.</p>
+        </a>
+        {% endif %}
+
+        </a>
+
+        <!-- Performance Tracking -->
+        <a href="{% url 'exams:performance' %}" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
+            <div class="flex items-center mb-4">
+                <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                    </path>
+                </svg>
+                <h2 class="text-xl font-semibold text-gray-800">Performance Tracking</h2>
+            </div>
+            <p class="text-gray-600">Monitor your progress with detailed analytics and insights.</p>
+        </a>
+
+        <!-- Study Guides -->
+        <a href="{% url 'exams:materials' %}" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
+            <div class="flex items-center mb-4">
+                <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                    </path>
+                </svg>
+                <h2 class="text-xl font-semibold text-gray-800">Study Guides</h2>
+            </div>
+            <p class="text-gray-600">Explore comprehensive guides to enhance your study experience.</p>
+        </a>
+    </section>
+</div>
+{% endblock %}

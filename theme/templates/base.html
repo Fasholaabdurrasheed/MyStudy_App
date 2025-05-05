@@ -1,0 +1,208 @@
+{% load static %}
+{% load exam_tags %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MyStudy App{% endblock %}</title>
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <meta name="theme-color" content="#1d4ed8">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <link rel="apple-touch-icon" href="{% static 'icons/icon-192.png' %}">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        #chat-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chat-body::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .dropdown-menu {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800 min-h-screen">
+    <!-- Header with Dropdown Menu -->
+    <header class="bg-blue-700 text-white shadow-lg fixed top-0 w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <span class="text-lg sm:text-xl font-bold tracking-wide">📘 MyStudy App</span>
+            </div>
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:flex space-x-6">
+                <a href="{% url 'home' %}" class="hover:text-blue-200">Home</a>
+                <a href="{% url 'exams:my_courses' %}" class="hover:text-blue-200">Courses</a>
+                <a href="{% url 'exams:join_course' %}" class="hover:text-blue-200">Join_Courses</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'exams:materials' %}" class="hover:text-blue-200">Materials</a>
+                {% get_exam_course_id user as exam_course_id %}
+                {% if exam_course_id %}
+                <a href="{% url 'exams:available_exams' course_id=exam_course_id %}"
+                    class="hover:text-blue-200">Exams</a>
+                {% endif %}
+
+
+                <a href="{% url 'exams:performance' %}" class="hover:text-blue-200">Performance</a>
+                <a href="{% url 'exams:inbox' %}" class="hover:text-blue-200 relative">
+                    Messages
+                    {% if unread_count > 0 %}
+                    <span class="absolute -top-2 -right-3 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                        {{ unread_count }}
+                    </span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'users:profile' %}" class="hover:text-blue-200">Profile</a>
+                {% endif %}
+            </nav>
+            <!-- Mobile Menu Button -->
+            <div class="md:hidden">
+                <button id="menu-toggle" class="focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-blue-600 text-white">
+            <nav class="flex flex-col space-y-2 px-4 py-4">
+                <a href="{% url 'home' %}" class="hover:bg-blue-500 p-2 rounded">Home</a>
+                <a href="{% url 'exams:my_courses' %}" class="hover:bg-blue-500 p-2 rounded">Courses</a>
+                <a href="{% url 'exams:join_course' %}" class="hover:bg-blue-500 p-2 rounded">Join_Courses</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'exams:materials' %}" class="hover:bg-blue-500 p-2 rounded">Materials</a>
+                {% get_exam_course_id user as exam_course_id %}
+                {% if exam_course_id %}
+                <a href="{% url 'exams:available_exams' course_id=exam_course_id %}"
+                    class="hover:text-blue-200">Exams</a>
+                {% endif %}
+
+
+
+                <a href="{% url 'exams:performance' %}" class="hover:bg-blue-500 p-2 rounded">Performance</a>
+                <a href="{% url 'exams:inbox' %}" class="hover:bg-blue-500 p-2 rounded relative">
+                    Messages
+                    {% if unread_count > 0 %}
+                    <span class="absolute top-1 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                        {{ unread_count }}
+                    </span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'users:profile' %}" class="hover:bg-blue-500 p-2 rounded">Profile</a>
+                <form method="POST" action="{% url 'logout' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="hover:bg-red-500 p-2 rounded text-red-200">Logout</button>
+                </form>
+
+                {% else %}
+                <a href="{% url 'login' %}" class="hover:bg-blue-500 p-2 rounded">Login</a>
+                <a href="{% url 'users:signup' %}" class="hover:bg-blue-500 p-2 rounded">Sign Up</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-20 pb-10">
+        {% if messages %}
+        <div class="max-w-4xl mx-auto px-4">
+            {% for message in messages %}
+            <div class="mb-4 p-4 rounded shadow-md 
+            {% if message.tags == 'success' %}bg-green-100 text-green-800
+            {% elif message.tags == 'error' %}bg-red-100 text-red-800
+            {% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800
+            {% else %}bg-blue-100 text-blue-800
+            {% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center py-4 text-sm">
+        © {{ now|date:"Y" }} MyStudy App. All rights reserved.
+    </footer>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbot-container"
+        class="fixed bottom-5 right-5 w-80 bg-white shadow-lg rounded-lg p-4 border border-gray-300 hidden">
+        <div class="font-bold text-lg mb-2 text-blue-600">🤖 StudyBot</div>
+        <div id="chat-window" class="h-64 overflow-y-auto mb-2 p-2 bg-gray-100 rounded text-sm"></div>
+        <input id="chat-input" type="text" placeholder="Ask something..." class="w-full p-2 border rounded text-sm" />
+        <button onclick="sendMessage()"
+            class="mt-2 w-full bg-blue-600 text-white px-3 py-1 rounded text-sm">Send</button>
+    </div>
+
+    <!-- Chatbot Toggle Button -->
+    <button id="chat-toggle"
+        class="fixed bottom-6 right-6 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700">
+        💬
+    </button>
+
+    <!-- Scripts -->
+    <script>
+        // Mobile Menu Toggle
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Chatbot Toggle
+        document.getElementById('chat-toggle').addEventListener('click', () => {
+            const chatbot = document.getElementById('chatbot-container');
+            chatbot.classList.toggle('hidden');
+        });
+
+        // Service Worker
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("{% static 'js/service-worker.js' %}")
+                    .then(reg => console.log("SW registered ✅", reg))
+                    .catch(err => console.log("SW error ❌", err));
+            });
+        }
+
+        // Chatbot Functionality
+        async function sendMessage() {
+            const input = document.getElementById("chat-input");
+            const chatWindow = document.getElementById("chat-window");
+
+            const userMessage = input.value.trim();
+            if (!userMessage) return;
+
+            chatWindow.innerHTML += `<div class="mb-2"><strong>You:</strong> ${userMessage}</div>`;
+            input.value = "";
+
+            const response = await fetch("{% url 'chatbot_response' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ message: userMessage })
+            });
+
+            const data = await response.json();
+            const botMessage = data.response || "Sorry, something went wrong.";
+            chatWindow.innerHTML += `<div class="mb-2"><strong>StudyBot:</strong> ${botMessage}</div>`;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>

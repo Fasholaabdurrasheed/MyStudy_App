@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">🎓 Student Dashboard</h1>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-4 rounded shadow">
+        <p class="text-sm text-gray-500">Total CBT Answers</p>
+        <p class="text-2xl font-semibold text-blue-600">{{ cbt_count }}</p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+        <p class="text-sm text-gray-500">Correct Answers</p>
+        <p class="text-2xl font-semibold text-green-600">{{ correct_count }}</p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+        <p class="text-sm text-gray-500">Theory Submissions</p>
+        <p class="text-2xl font-semibold text-purple-600">{{ theory_count }}</p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+        <p class="text-sm text-gray-500">Performance</p>
+        <p class="text-2xl font-semibold text-indigo-600">
+            {{ performance|default:"0" }}%
+        </p>
+    </div>
+    <div class="bg-white p-4 rounded shadow mb-6">
+        <h2 class="text-lg font-semibold mb-2">📊 CBT Performance</h2>
+        <div id="performanceChart" style="height: 350px;"></div>
+    </div>
+    
+    
+</div>
+
+<!-- Add more widgets or links -->
+<a href="{% url 'my_cbt_answers' %}" class="text-blue-700 underline mr-4">📄 View CBT History</a>
+<a href="{% url 'my_theory_submissions' %}" class="text-blue-700 underline">📝 View Theory Submissions</a>
+
+<script>
+    const chartLabels = ('{{ chart_data.labels|safe }}');
+    const chartValues = JSON.parse('{{ chart_data.data|safe|escapejs }}');
+
+    const data = [{
+        values: chartValues,
+        labels: chartLabels,
+        type: 'pie',
+        hole: .4,
+        marker: {
+            colors: ['#10b981', '#ef4444']
+        },
+        hoverinfo: 'label+percent',
+        textinfo: 'label+value',
+    }];
+
+    const layout = {
+        title: 'CBT Accuracy Breakdown',
+        height: 300,
+        margin: { t: 40, l: 0, r: 0, b: 0 },
+        showlegend: true,
+    };
+
+    Plotly.newPlot('performanceChart', data, layout, { responsive: true });
+</script>
+
+
+{% endblock %}

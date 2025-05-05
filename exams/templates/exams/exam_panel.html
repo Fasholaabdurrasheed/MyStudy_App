@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load dict_extras %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">📊 My Exams Dashboard</h1>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="bg-blue-100 rounded-xl p-4 shadow">
+            <p class="text-sm text-blue-700">Total Exams</p>
+            <p class="text-2xl font-bold text-blue-900">{{ total_exams }}</p>
+        </div>
+        <div class="bg-green-100 rounded-xl p-4 shadow">
+            <p class="text-sm text-green-700">Exams Taken</p>
+            <p class="text-2xl font-bold text-green-900">{{ taken_exams }}</p>
+        </div>
+        <div class="bg-red-100 rounded-xl p-4 shadow">
+            <p class="text-sm text-red-700">Not Attempted</p>
+            <p class="text-2xl font-bold text-red-900">{{ not_taken }}</p>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="mb-10 bg-white rounded-lg p-6 shadow">
+        <h2 class="text-lg font-semibold mb-4">Exam Completion Chart</h2>
+        <div id="examPieChart" class="w-full h-80"></div>
+    </div>
+
+    <!-- Plotly CDN -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <!-- Exams Table -->
+    <div class="bg-white rounded-lg shadow overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Exam Title</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Course</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Score</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Submitted On</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for exam in exams %}
+                    {% with submission=submission_map|dictkey:exam.id %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3">{{ exam.title }}</td>
+                        <td class="px-4 py-3">{{ exam.course.name }}</td>
+                        <td class="px-4 py-3">
+                            {% if submission %}
+                                <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">Submitted</span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">Not Started</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if submission %}
+                                {{ submission.score|floatformat:1 }}%
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if submission %}
+                                {{ submission.created_at|date:"M d, Y H:i" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 space-x-2">
+                            {% if submission %}
+                                <a href="{% url 'exams:exam_result' exam.id %}" class="text-blue-600 hover:underline text-sm">View Result</a>
+                                <a href="{% url 'exams:review_answers' exam.id %}" class="text-indigo-600 hover:underline text-sm">Review Answers</a>
+                            {% else %}
+                                <a href="{% url 'exams:start_exam' exam.id %}" class="text-green-600 hover:underline text-sm">Start</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endwith %}
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-4 py-4 text-center text-gray-500">No exams available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    var data = [{
+        values: ["{{ taken_exams|default:0 }}", "{{ not_taken|default:0 }}"],
+        labels: ['Taken', 'Not Taken'],
+        type: 'pie',
+        marker: {
+            colors: ['#34d399', '#f87171']
+        }
+    }];
+
+    var layout = {
+        height: 300,
+        width: '100%',
+        margin: { t: 20, b: 20, l: 0, r: 0 },
+        showlegend: true
+    };
+
+    Plotly.newPlot('examPieChart', data, layout, {responsive: true});
+</script>
+{% endblock %}

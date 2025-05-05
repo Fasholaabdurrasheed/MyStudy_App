@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mx-auto p-6 flex flex-col items-center">
+  <div class="w-full max-w-xl bg-white p-8 rounded-lg shadow-lg">
+    <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Exam Completed!</h1>
+
+    <!-- Score Circle -->
+    <div class="flex justify-center mb-6">
+      <div class="relative w-32 h-32">
+        <svg class="transform -rotate-90" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" stroke="#e5e7eb" stroke-width="10" fill="transparent" />
+          <circle 
+            cx="50" cy="50" r="45" 
+            stroke="{% if passed %}#22c55e{% else %}#ef4444{% endif %}" 
+            stroke-width="10" 
+            stroke-dasharray="282" 
+            stroke-dashoffset="{{ stroke_offset }}" 
+            fill="transparent" />
+        </svg>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <span class="text-2xl font-bold text-gray-700">{{ score }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pass/Fail Message -->
+    <div class="mb-6">
+      {% if passed %}
+        <p class="text-green-600 font-bold text-xl">🎉 Congratulations! You passed!</p>
+      {% else %}
+        <p class="text-red-600 font-bold text-xl">❌ Sorry, you didn't pass. Keep practicing!</p>
+      {% endif %}
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col md:flex-row justify-center gap-4 mt-6">
+      <a href="{% url 'exams:available_exams' course_id=exam.course.id %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-full transition duration-300">
+        Back to Exams
+      </a>
+      <a href="{% url 'exams:review_answers' exam_id=exam_id %}" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-full transition duration-300">
+        Review Answers
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

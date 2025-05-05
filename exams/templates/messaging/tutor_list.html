@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto p-6">
+  <h2 class="text-2xl font-bold mb-4">Available Tutors</h2>
+
+  <!-- Search Form -->
+  <form method="get" class="mb-4 flex flex-col sm:flex-row gap-2">
+    <input type="text" name="q" placeholder="Search by name or username" value="{{ query }}" class="px-4 py-2 border rounded w-full sm:w-2/3">
+    <label class="inline-flex items-center">
+      <input type="checkbox" name="mine" value="1" {% if filter_my_chats %}checked{% endif %}>
+      <span class="ml-2">Only tutors I've chatted with</span>
+    </label>
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Search</button>
+  </form>
+
+  <!-- Tutors List -->
+  <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for item in tutors %}
+      {% with tutor=item.user message=item.last_message %}
+      <li class="border p-4 rounded shadow bg-white">
+        <h3 class="text-lg font-semibold">{{ tutor.get_full_name|default:tutor.username }}</h3>
+        <p class="text-sm text-gray-600">{{ tutor.email }}</p>
+
+        {% if message %}
+          <div class="mt-2 text-sm text-gray-700 italic">
+            <strong>{{ message.sender == user|yesno:"You,Them" }}:</strong>
+            {{ message.content|truncatewords:12 }}
+            <br>
+            <span class="text-xs text-gray-400">{{ message.timestamp|naturaltime }}</span>
+          </div>
+        {% else %}
+          <p class="mt-2 text-gray-400 italic text-sm">No conversation yet.</p>
+        {% endif %}
+
+        <a href="{% url 'exams:chat_with_tutor' tutor.username %}" class="inline-block mt-4 bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700">
+          {{ message|yesno:"Continue Chat,Start Conversation" }}
+        </a>
+      </li>
+      {% endwith %}
+    {% empty %}
+      <p>No tutors found.</p>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

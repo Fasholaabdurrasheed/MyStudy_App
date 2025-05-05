@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Chat with StudyBot{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto mt-20 p-6 bg-white rounded-lg shadow-lg border">
+    <h2 class="text-2xl font-bold mb-4 text-blue-700">🤖 Chat with StudyBot</h2>
+
+    <div id="chat-window" class="h-96 overflow-y-auto mb-4 p-3 bg-gray-100 rounded text-sm border border-gray-300">
+        <!-- Chat messages appear here -->
+    </div>
+
+    <div class="flex gap-2">
+        <input id="chat-input" type="text" placeholder="Ask about courses, exams, or study tips..." class="flex-1 p-2 border rounded text-sm" />
+        <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm">Send</button>
+    </div>
+</div>
+
+<script>
+    async function sendMessage() {
+        const input = document.getElementById("chat-input");
+        const chatWindow = document.getElementById("chat-window");
+
+        const userMessage = input.value.trim();
+        if (!userMessage) return;
+
+        chatWindow.innerHTML += `<div class="mb-2"><strong>You:</strong> ${userMessage}</div>`;
+        input.value = "";
+
+        const response = await fetch("{% url 'chatbot_response' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({ message: userMessage })
+        });
+
+        const data = await response.json();
+        const botMessage = data.response || "Sorry, something went wrong.";
+        chatWindow.innerHTML += `<div class="mb-2 text-blue-700"><strong>StudyBot:</strong> ${botMessage}</div>`;
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+</script>
+{% endblock %}

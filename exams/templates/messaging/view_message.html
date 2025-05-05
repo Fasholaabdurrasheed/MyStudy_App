@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block content %}
+<div class="container mx-auto max-w-2xl p-4">
+  <h1 class="text-2xl font-bold mb-4">Conversation with {{ other_user.username }}</h1>
+
+  <!-- Chat Box -->
+  <div class="bg-white shadow-md rounded-lg p-4 h-[500px] overflow-y-auto space-y-4">
+    {% for msg in messages %}
+
+      <div class="flex {% if msg.sender == request.user %}justify-end{% else %}justify-start{% endif %}">
+        {% if msg.sender != request.user %}
+          <img src="{% if msg.sender.profile.image %}{{ msg.sender.profile.image.url }}{% else %}/static/images/default.jpg{% endif %}" 
+               alt="{{ msg.sender.username }}" 
+               class="w-8 h-8 rounded-full mr-2 object-cover">
+        {% endif %}
+        <div class="max-w-xs px-4 py-2 rounded-lg shadow text-sm
+                    {% if msg.sender == request.user %}
+                      bg-blue-500 text-white
+                    {% else %}
+                      bg-gray-100 text-gray-800
+                    {% endif %}">
+          <p>{{ msg.content }}</p>
+          <p class="text-[10px] mt-1 text-right opacity-70">{{ msg.timestamp|naturaltime }}</p>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-gray-500 text-sm text-center">No messages yet.</p>
+    {% endfor %}
+    
+  </div>
+
+  <!-- Reply Form -->
+  <form method="post" class="mt-4">
+    {% csrf_token %}
+    <div class="flex gap-2">
+      <textarea name="content" rows="2" placeholder="Type your reply..." required
+        class="flex-1 px-3 py-2 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Send
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

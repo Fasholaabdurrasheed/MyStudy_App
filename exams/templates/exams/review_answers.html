@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mx-auto p-6">
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-800">Review Your Answers</h1>
+    <p class="text-gray-600 mt-2">Exam: <span class="font-semibold">{{ exam.name }}</span></p>
+  </div>
+
+  <div class="space-y-6">
+    {% for answer in answers %}
+    <div class="p-6 rounded-lg shadow-md bg-white relative">
+        <h2 class="text-lg font-semibold mb-2 text-gray-800">
+          {{ forloop.counter }}. {{ answer.question.text }}
+        </h2>
+      
+        <!-- Bonus: Percentage badge -->
+        <div class="absolute top-4 right-4 bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-semibold">
+          {{ question_mark }}%
+        </div>
+      
+        <div class="mb-4 mt-2">
+          <p>
+            <span class="font-semibold text-gray-700">Your Answer:</span>
+            <span class="{% if answer.is_correct %}text-green-600{% else %}text-red-600{% endif %}">
+              {{ answer.selected_option }}
+            </span>
+          </p>
+      
+          {% if not answer.is_correct %}
+          <p class="mt-2">
+            <span class="font-semibold text-gray-700">Correct Answer:</span>
+            <span class="text-green-600">{{ answer.question.correct_option }}</span>
+          </p>
+          {% endif %}
+        </div>
+      
+        {% if answer.is_correct %}
+          <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">✔ Correct</span>
+        {% else %}
+          <span class="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">✘ Incorrect</span>
+        {% endif %}
+      </div>
+      
+    {% empty %}
+      <div class="text-center text-gray-500">
+        <p>No answers found for this exam.</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="flex justify-center mt-10">
+    <a href="{% url 'exams:available_exams' course_id=exam.course.id %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-full transition duration-300">
+      Back to Exams
+    </a>
+  </div>
+</div>
+{% endblock %}

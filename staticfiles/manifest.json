@@ -1,0 +1,37 @@
+{
+  "name": "MyStudy App",
+  "short_name": "MyStudy",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1d4ed8",
+  "description": "A WAEC, NECO, JAMB practice and university academic portal.",
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/screenshots/screen1.png",
+      "sizes": "720x340",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Desktop Dashboard"
+    },
+    {
+      "src": "/static/screenshots/mobile-screen1.png",
+      "sizes": "540x540",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile Home Screen"
+    }
+  ]
+}

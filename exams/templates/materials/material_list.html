@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Materials{% if course %} for {{ course.title }}{% else %} for Enrolled Courses{% endif %} {{ course.name }}{% endblock %}
+{% block content %}
+{% load custom_filters %}
+{% load static %}
+
+<div class="mt-24 px-4">
+    <h2 class="text-3xl font-bold mb-8 text-center text-blue-700">📚 Materials for "{{course.title }}"</h2>
+
+    {% if materials %}
+    <div class="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        {% for material in materials %}
+        <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+            {% if material.file.url|endswith:".pdf" %}
+                <div class="bg-red-100 p-4 flex justify-center">
+                    <img src="{% static 'images/pdf_icon.png' %}" alt="PDF" class="h-20">
+                </div>
+            {% elif material.file.url|endswith:".doc" or material.file.url|endswith:".docx" %}
+                <div class="bg-blue-100 p-4 flex justify-center">
+                    <img src="{% static 'images/doc_icon.png' %}" alt="DOC" class="h-20">
+                </div>
+            {% else %}
+                <div class="bg-gray-100 p-4 flex justify-center">
+                    <img src="{% static 'images/file_icon.png' %}" alt="File" class="h-20">
+                </div>
+            {% endif %}
+
+            <div class="p-4 flex-1 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-bold mb-2 truncate">{{ material.title }}</h3>
+                    <p class="text-gray-600 text-sm mb-4">
+                        {{ material.description|truncatechars:80 }}
+                    </p>
+                    <p class="text-gray-400 text-xs">Uploaded: {{ material.created_at|date:"M d, Y" }}</p>
+                </div>
+                <div class="mt-4">
+                    <a href="{{ material.file.url }}" download class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+                        📥 Download
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center text-gray-600">No materials uploaded yet.</div>
+    {% endif %}
+
+    <div class="text-center mt-10">
+        {% if request.user.is_staff and enrolled_courses %}
+            {% for course in enrolled_courses %}
+                <a href="{% url 'exams:upload_material' course_id=course.id %}"
+                   class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold m-2 inline-block">
+                    ➕ Upload Material for {{ course.name }}
+                </a>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+</div>
+
+{% endblock %}

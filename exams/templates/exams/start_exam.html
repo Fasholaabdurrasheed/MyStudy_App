@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto p-4 md:px-8">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-xl font-bold">{{ exam.name }}</h1>
+        <div class="flex items-center space-x-4">
+            <div class="text-red-500 font-semibold">Time Left: <span id="timer">{{ time_left }}</span></div>
+            <div class="w-40 bg-gray-300 rounded-full h-2">
+                <div id="timer-progress" class="bg-green-500 h-2 rounded-full transition-all duration-1000"></div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="exam-form">
+        {% csrf_token %}
+        <div class="border p-6 rounded-lg shadow bg-white">
+            <h2 class="text-lg font-semibold mb-4">
+                Question {{ current_index|add:"1" }} of {{ total_questions }}
+                <span class="text-sm text-gray-500">(Answered: {{ current_index|add:"1" }}/{{ total_questions }})</span>
+            </h2>
+
+            <p class="mb-4 font-medium">{{ current_question.text }}</p>
+
+            {% with selected=selected_option %}
+            <div class="space-y-3">
+                <label class="block p-3 rounded cursor-pointer border {% if selected == 'A' %}bg-blue-100 border-blue-500{% else %}hover:bg-gray-50 border-gray-300{% endif %}">
+                    <input type="radio" name="selected_option" value="A" class="mr-2" {% if selected == "A" %}checked{% endif %}>
+                    {{ current_question.option_a }}
+                </label>
+                <label class="block p-3 rounded cursor-pointer border {% if selected == 'B' %}bg-blue-100 border-blue-500{% else %}hover:bg-gray-50 border-gray-300{% endif %}">
+                    <input type="radio" name="selected_option" value="B" class="mr-2" {% if selected == "B" %}checked{% endif %}>
+                    {{ current_question.option_b }}
+                </label>
+                <label class="block p-3 rounded cursor-pointer border {% if selected == 'C' %}bg-blue-100 border-blue-500{% else %}hover:bg-gray-50 border-gray-300{% endif %}">
+                    <input type="radio" name="selected_option" value="C" class="mr-2" {% if selected == "C" %}checked{% endif %}>
+                    {{ current_question.option_c }}
+                </label>
+                <label class="block p-3 rounded cursor-pointer border {% if selected == 'D' %}bg-blue-100 border-blue-500{% else %}hover:bg-gray-50 border-gray-300{% endif %}">
+                    <input type="radio" name="selected_option" value="D" class="mr-2" {% if selected == "D" %}checked{% endif %}>
+                    {{ current_question.option_d }}
+                </label>
+            </div>
+            {% endwith %}
+
+            <div class="mt-8 flex justify-between sticky bottom-4 bg-white py-2">
+                {% if current_index > 0 %}
+                <button name="prev" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+                    Previous
+                </button>
+                {% else %}
+                <div></div>
+                {% endif %}
+
+                {% if current_index == total_questions|add:"-1" %}
+                <button id="submit-btn" name="submit_exam" value="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                    Submit Exam
+                </button>
+                {% else %}
+                <button name="next" value="next" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                    Next
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <input type="hidden" name="current_index" value="{{ current_index }}">
+        <input type="hidden" name="question_id" value="{{ current_question.id }}">
+
+        <div id="loading-spinner" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="w-16 h-16 border-4 border-t-4 border-blue-500 rounded-full animate-spin"></div>
+        </div>
+    </form>
+</div>
+
+<script>
+    let totalSeconds = parseInt('{{ time_limit }}');
+    const timerDisplay = document.getElementById('timer');
+    const progressBar = document.getElementById('timer-progress');
+    const maxSeconds = totalSeconds;
+
+    function updateTimer() {
+        if (isNaN(totalSeconds) || totalSeconds < 0) {
+            alert('Invalid timer configuration! Submitting...');
+            document.getElementById('exam-form').submit();
+            return;
+        }
+
+        let mins = Math.floor(totalSeconds / 60);
+        let secs = totalSeconds % 60;
+        timerDisplay.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+        let progress = ((maxSeconds - totalSeconds) / maxSeconds) * 100;
+        progressBar.style.width = `${progress}%`;
+
+        if (totalSeconds <= 60) {
+            progressBar.classList.replace('bg-green-500', 'bg-red-500');
+        }
+
+        if (totalSeconds <= 0) {
+            alert('Time is up! Auto-submitting...');
+            document.getElementById('exam-form').submit();
+        } else {
+            totalSeconds--;
+            setTimeout(updateTimer, 1000);
+        }
+    }
+
+    if (totalSeconds > 0) {
+        updateTimer();
+    } else {
+        alert('Time expired. Submitting...');
+        document.getElementById('exam-form').submit();
+    }
+
+    // Loading spinner on submit
+    const form = document.getElementById('exam-form');
+    let submitting = false;
+    form.addEventListener('submit', function (e) {
+        if (submitting) {
+            e.preventDefault();
+            return;
+        }
+        submitting = true;
+        document.getElementById('loading-spinner').classList.remove('hidden');
+    });
+
+    // Keyboard shortcuts: A, B, C, D to select options
+    document.addEventListener('keydown', function (event) {
+        const key = event.key.toUpperCase();
+        if (['A', 'B', 'C', 'D'].includes(key)) {
+            const radio = document.querySelector(`input[type="radio"][value="${key}"]`);
+            if (radio && !radio.disabled) {
+                radio.checked = true;
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Join Course{% endblock %}
+{% block content %}
+
+<div class="max-w-3xl mx-auto bg-white p-8 mt-28 rounded shadow">
+    <h2 class="text-2xl font-bold mb-6 text-center" >🎯 Join a New Course</h2>
+
+    <form method="get" class="grid gap-4 mb-6">
+        <select name="faculty" onchange="this.form.submit()" class="border p-2 rounded">
+            <option value="">Select Faculty</option>
+            {% for faculty in faculties %}
+                <option value="{{ faculty.id }}" {% if selected_faculty == faculty.id|stringformat:"s" %}selected{% endif %}>{{ faculty.name }}</option>
+            {% endfor %}
+        </select>
+
+        {% if selected_faculty %}
+            <select name="department" onchange="this.form.submit()" class="border p-2 rounded">
+                <option value="">Select Department</option>
+                {% for dept in departments %}
+                    <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        {% endif %}
+    </form>
+
+    {% if selected_department %}
+        <h3 class="text-xl font-semibold mb-4">Available Courses</h3>
+        <ul class="space-y-4">
+            {% for course in courses %}
+                <li class="border rounded p-4 flex justify-between items-center">
+                    <span>{{ course.name }}</span>
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="course_id" value="{{ course.id }}">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Join</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>
+
+{% endblock %}

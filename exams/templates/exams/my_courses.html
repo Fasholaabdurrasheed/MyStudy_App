@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}My Courses{% endblock %}
+{% block content %}
+
+<div class="max-w-3xl mx-auto bg-white p-8 mt-28 rounded shadow">
+    <h2 class="text-2xl font-bold mb-6 text-center">📚 My Enrolled Courses</h2>
+
+    {% if my_courses %}
+        <ul class="space-y-6">
+            {% for enrollment in my_courses %}
+            <li class="border rounded-lg p-6 shadow flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                <div>
+                    <strong class="text-lg text-blue-700">{{ enrollment.course.name }}</strong><br>
+                    <small class="text-gray-600">{{ enrollment.course.department.name }} ({{ enrollment.course.department.faculty.name }})</small>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <a href="{% url 'exams:course_materials' enrollment.course.id %}" 
+                       class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-center">
+                        📄 View Materials
+                    </a>
+
+                    <form action="{% url 'exams:leave_course' enrollment.course.id %}" method="post" onsubmit="return confirm('Are you sure you want to leave this course?');">
+                        {% csrf_token %}
+                        <button type="submit" 
+                                class="bg-red-500 text-green-600 px-4 py-2 rounded hover:bg-red-600 w-full text-center">
+                            🚪 Leave Course
+                        </button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-center text-gray-500">You have not joined any course yet.</p>
+        <div class="text-center mt-6">
+            <a href="{% url 'exams:join_course' %}" class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 text-lg">
+                ➕ Join a Course
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

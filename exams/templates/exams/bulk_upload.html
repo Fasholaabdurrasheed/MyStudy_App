@@ -1,0 +1,22 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <div class="container mx-auto mt-10 max-w-xl p-5 border rounded shadow">
+    <h2 class="text-xl font-bold mb-4">Upload Bulk Questions for {{ exam.name }}</h2>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+
+      <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+        Upload
+      </button>
+    </form>
+
+    {% if form.errors %}
+      <div class="mt-4 text-red-600">
+        {{ form.errors }}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Performance Tracking{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Performance Tracking</h1>
+    {% if results %}
+        <ul class="space-y-4">
+            {% for result in results %}
+                <li class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold">{{ result.exam.title }}</h3>
+                    <p class="text-gray-600">Course: {{ result.exam.course.name }}</p>
+                    <p class="text-gray-600">Score: {{ result.score }}%</p>
+                    <p class="text-gray-600">Status: {% if result.passed %}Passed{% else %}Failed{% endif %}</p>
+                    <a href="{% url 'exams:exam_result' result.exam.id %}" class="text-blue-600 hover:underline">View Details</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-gray-600">No performance data available. Take an exam to track your progress.</p>
+    {% endif %}
+</div>
+{% endblock %}

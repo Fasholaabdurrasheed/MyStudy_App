@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Material Preview{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-16 p-6 bg-white shadow-lg rounded-lg">
+    <h1 class="text-2xl font-bold mb-6">📄 Preview Material</h1>
+
+    <div class="mb-6">
+        <p><strong>File Name:</strong> {{ material.file.name|slice:"15:" }}</p>
+        <p><strong>Uploaded:</strong> {{ material.uploaded_at|date:"M d, Y H:i" }}</p>
+        <p><strong>File Size:</strong> {{ material.file.size|filesizeformat }}</p>
+        <p><strong>File URL:</strong> <a href="{{ material.file.url }}" target="_blank">{{ material.file.url }}</a></p>
+    </div>
+
+    {% if material.file.url.endswith ".pdf" %}
+    <iframe src="{% url 'serve_media' path=material.file.name %}" class="w-full h-[80vh] rounded-md border" frameborder="0"></iframe>
+{% elif material.file.url.endswith ".jpg" or material.file.url.endswith ".png" %}
+    <img src="{{ material.file.url }}" class="w-full rounded-lg" alt="Material Image">
+{% elif material.file.url.endswith ".mp4" %}
+    <video controls class="w-full rounded-lg">
+        <source src="{{ material.file.url }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+{% else %}
+    <p class="text-gray-700 mb-4">⚠️ Preview not supported. Please download:</p>
+{% endif %}    {% else %}
+        <p class="text-red-600 mb-4">❌ File URL is not available.</p>
+    {% endif %}
+
+    <!-- 📥 Always show Download button if file exists -->
+    {% if material.file.url %}
+        <div class="mt-6">
+            <a href="{{ material.file.url }}" download class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                📥 Download Material
+            </a>
+        </div>
+    {% endif %}
+
+    <div class="mt-8">
+        <a href="{% url 'exams:materials_list' %}" class="text-blue-600 hover:underline">⬅ Back to Materials</a>
+    </div>
+</div>
+{% endblock %}
