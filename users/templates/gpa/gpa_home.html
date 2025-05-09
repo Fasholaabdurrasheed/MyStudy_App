@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your GPA Records</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-3xl w-full">
+        <h2 class="text-3xl font-bold mb-6 text-gray-800 dark:text-white text-center">Your GPA Records</h2>
+        <a href="{% url 'users:add_semester' %}" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 mb-6">Add New Semester</a>
+
+        <ul class="mt-4 space-y-4">
+            {% for semester in semesters %}
+                <li class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl">
+                    <span class="text-gray-800 dark:text-white font-medium">{{ semester.name }}</span> - GPA: <strong class="text-blue-600 dark:text-blue-400">{{ semester.calculate_gpa }}</strong>
+                </li>
+            {% empty %}
+                <li class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg text-gray-600 dark:text-gray-400 text-center">No GPA records yet.</li>
+            {% endfor %}
+        </ul>
+
+        <div class="mt-8">
+            <h3 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-white text-center">GPA Trend</h3>
+            <div id="gpa-chart" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <script>
+        try {
+            // Assume chart is a JSON string and parse it
+            var chartJson = "{{ chart|escapejs }}";
+            var chart = chartJson ? JSON.parse(chartJson) : null;
+            
+            // Verify that chart has the expected properties
+            if (chart && chart.data && chart.layout) {
+                Plotly.newPlot('gpa-chart', chart.data, chart.layout);
+            } else {
+                console.error("Invalid chart data: Missing data or layout properties", chart);
+                document.getElementById('gpa-chart').innerHTML = "<p class='text-red-600 text-center'>Unable to display GPA trend chart due to invalid data.</p>";
+            }
+        } catch (e) {
+            console.error("Error parsing or rendering chart:", e);
+            document.getElementById('gpa-chart').innerHTML = "<p class='text-red-600 text-center'>Unable to display GPA trend chart due to an error.</p>";
+        }
+    </script>
+</body>
+</html>

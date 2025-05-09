@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
-from exams.views import serve_media
+from exams.views import serve_media, custom_admin_dashboard, export_course_attempts_excel
 
 app_name = 'exams'
 
@@ -35,9 +35,14 @@ urlpatterns = [
     path('courses/<int:course_id>/enroll/', views.enroll_in_course, name='enroll_in_course'),
     path('my-exams/', views.exam_panel, name='exam_panel'),
     path('exam/<int:exam_id>/submit/', views.submit_exam, name='submit_exam'),
-    # path('past-questions/', views.student_past_questions, name='student_past_questions'),
+    path('admin-dashboard/', custom_admin_dashboard, name='admin_dashboard'),
     path('past-questions/', views.past_questions, name='past_questions'),
     path('upload-question/', views.upload_past_question, name='upload_past_question'),
+    path('exam/<int:exam_id>/leaderboard/', views.leaderboard, name='leaderboard'),
+    path('exam/<int:exam_id>/result/pdf/', views.download_result_pdf, name='download_result_pdf'),
+    path('admin-dashboard/export-course-attempts-excel/', export_course_attempts_excel, name='export_course_attempts_excel'),
+    path('leaderboard/export-pdf/', views.export_leaderboard_pdf, name='export_leaderboard_pdf'),
+
 ]
 
 if settings.DEBUG:

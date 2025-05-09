@@ -80,3 +80,7 @@ class CourseEnrollmentAdmin(admin.ModelAdmin):
     list_display = ('user', 'course', 'enrolled_at')  # corrected field name
     search_fields = ('user__username', 'course__name')
     list_filter = ('course',)  
+
+admin.site.site_header = "Exams Admin"
+admin.site.site_title = "MyStudy_App"
+admin.site.index_title = "Welcome to the  Admin Portal"

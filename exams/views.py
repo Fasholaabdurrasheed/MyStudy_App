@@ -2,10 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import CourseExam, CourseQuestion, CourseAnswer, CourseExamAttempt, Announcement, Message, CourseEnrollment
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.template.loader import render_to_string
+from django.template.loader import render_to_string, get_template
 from xhtml2pdf import pisa
 import random
 from django.utils import timezone
+from django.utils.timezone import now
 from datetime import datetime, timedelta
 from .models import Faculty, Department, Course, CourseEnrollment, CourseMaterial, Material, ExamSubmission, PastQuestionFile
 from django.contrib import messages
@@ -18,10 +19,11 @@ from django.conf import settings
 from .forms import MessageForm, BulkQuestionUploadForm, CourseQuestionForm
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
-from django.db.models import Max, Q
+from django.db.models import Max, Q, Count, Avg 
 from django.http import JsonResponse
 import json
 import pandas as pd
+import openpyxl
 from django.views.decorators.http import require_POST
 
 
@@ -459,7 +461,19 @@ def chat_view(request, username):
     })
 @login_required
 def tutor_list(request):
-    tutor_group = Group.objects.get(name="Tutor")
+    try:
+        tutor_group = Group.objects.get(name="Tutor")
+    except Group.DoesNotExist:
+        # Optionally create the group if it doesn't exist
+        tutor_group = Group.objects.create(name="Tutor")
+        # Or return an empty list with a message
+        # return render(request, 'messaging/tutor_list.html', {
+        #     'tutors': [],
+        #     'query': '',
+        #     'filter_my_chats': False,
+        #     'error': 'No tutors available. The Tutor group does not exist.'
+        # })
+
     query = request.GET.get("q", "")
     filter_my_chats = request.GET.get("mine") == "1"
 
@@ -677,3 +691,106 @@ def past_questions(request):
         'courses': courses,
         'years': years,
     })
+
+@staff_member_required
+def custom_admin_dashboard(request):
+    # Submissions per exam, using 'name' instead of 'title'
+    submissions_per_exam = CourseExamAttempt.objects.values('exam__name').annotate(total=Count('id'))
+
+    # Average scores over time, using completed_at
+    seven_days_ago = timezone.now() - timedelta(days=7)
+    avg_scores = (
+        CourseExamAttempt.objects.filter(completed_at__gte=seven_days_ago)
+        .extra({'day': "date(completed_at)"})
+        .values('day')
+        .annotate(avg_score=Avg('score'))
+        .order_by('day')
+    )
+
+    # Dynamic stats for dashboard cards
+    total_users = User.objects.count()
+    submissions_today = CourseExamAttempt.objects.filter(
+        started_at__date=timezone.now().date()
+    ).count()
+    # Assuming 'pending_reviews' means incomplete attempts (completed_at is null)
+    pending_reviews = CourseExamAttempt.objects.filter(completed_at__isnull=True).count()
+
+    # Data for dynamic URLs
+    exams = CourseExam.objects.all()
+    courses = Course.objects.all()
+    questions = CourseQuestion.objects.all()
+
+    # Context for template
+    context = {
+        'submissions_per_exam': list(submissions_per_exam),
+        'avg_scores': list(avg_scores),
+        'total_users': total_users,
+        'submissions_today': submissions_today,
+        'pending_reviews': pending_reviews,
+        'exams': exams,
+        'courses': courses,
+        'questions': questions,
+    }
+
+    return render(request, 'admin_dashboard/dashboard_home.html', context)
+@login_required
+def download_result_pdf(request, exam_id):
+    exam = get_object_or_404(CourseExam, id=exam_id)
+    submission = get_object_or_404(ExamSubmission, exam=exam, user=request.user)
+
+    template = get_template('exams/result_pdf.html')
+    html = template.render({'submission': submission})
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Result_{exam.name}.pdf"'
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    if pisa_status.err:
+        return HttpResponse("Error generating PDF", status=500)
+    return response
+
+@login_required
+def leaderboard(request, exam_id):
+    exam = get_object_or_404(CourseExam, id=exam_id)
+    submissions = ExamSubmission.objects.filter(exam=exam).order_by('-score')[:50]
+
+    context = {
+        'exam': exam,
+        'submissions': submissions,
+    }
+    return render(request, 'exams/leaderboard.html', context)
+def export_leaderboard_pdf(request):
+    attempts = CourseExamAttempt.objects.select_related('user', 'exam').order_by('-score')
+    template_path = 'exams/leaderboard_pdf.html'
+    context = {'attempts': attempts}
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="leaderboard.pdf"'
+    template = get_template(template_path)
+    html = template.render(context)
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse('Error generating PDF', status=500)
+    return response
+
+def export_course_attempts_excel(request):
+    attempts = CourseExamAttempt.objects.select_related('student', 'exam')
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Exam Attempts"
+    ws.append(['Student', 'Exam', 'Score', 'Submitted At'])
+
+    for attempt in attempts:
+        ws.append([
+            attempt.student.username,
+            attempt.exam.title,
+            attempt.score,
+            attempt.submitted_at.strftime('%Y-%m-%d %H:%M')
+        ])
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=course_exam_attempts.xlsx'
+    wb.save(response)
+    return response

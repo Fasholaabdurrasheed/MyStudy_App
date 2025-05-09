@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto p-4">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-blue-700">🏆 Leaderboard for {{ exam.name }}</h2>
+        <a href="" class="text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 transition">
+            ← Back to Dashboard
+        </a>
+        <a href="{% url 'exams:export_leaderboard_pdf' %}" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+            Export as PDF
+        </a>
+    </div>
+    <div class="overflow-x-auto shadow rounded-lg">
+        <table class="min-w-full bg-white divide-y divide-gray-200">
+            <thead class="bg-blue-100">
+                <tr>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Rank</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Student</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Score</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Correct</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Submitted At</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for submission in submissions %}
+                <tr class="{% if forloop.first %}bg-yellow-50 font-semibold{% endif %}">
+                    <td class="px-4 py-2">
+                        {{ forloop.counter }}
+                        {% if forloop.first %}
+                            <span class="ml-2 inline-block text-yellow-600 text-xs font-bold bg-yellow-100 px-2 py-0.5 rounded-full">
+                                🥇 Top Scorer
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-2">{{ submission.user.username }}</td>
+                    <td class="px-4 py-2">{{ submission.score }}%</td>
+                    <td class="px-4 py-2">{{ submission.correct_answers }}/{{ submission.total_questions }}</td>
+                    <td class="px-4 py-2">{{ submission.submitted_at|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-4 py-4 text-center text-gray-500">No submissions yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

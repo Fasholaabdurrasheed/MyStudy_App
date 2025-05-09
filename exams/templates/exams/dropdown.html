@@ -1,0 +1,13 @@
+<div x-data="{ open: false }" class="relative">
+    <button @click="open = !open; if (window.innerWidth < 768) isSidebarOpen = false"
+      class="flex items-center w-full px-4 py-2 rounded hover:bg-{{ color }}-100 text-gray-700">
+      <span class="mr-2">{{ icon }} {{ label }}</span>
+      <svg :class="{ 'rotate-180': open }" class="w-4 h-4 ml-auto transform transition-transform" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+    <div x-show="open" @click.away="open = false" class="mt-2 bg-white shadow-lg rounded-lg overflow-hidden z-40">
+      {{ items|safe }}
+    </div>
+  </div>
+  

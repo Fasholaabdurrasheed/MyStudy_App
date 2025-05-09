@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-zrbhm*=etbpe83-(_ckn9tr#(gum$)u8_2m-8=tl_xlh-foa*p
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'localhost', '127.0.0.1', '192.168.219.1','192.168.6.1',
+    'localhost', '127.0.0.1', '192.168.219.1','192.168.23.1',
 ]
 
 import os
@@ -75,7 +75,7 @@ ROOT_URLCONF = 'MyStudy_App.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -156,3 +156,14 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 TAILWIND_APP_NAME = 'theme'
 INTERNAL_IPS = ['127.0.0.1']  # for live reload
 NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Console output for testing
+DEFAULT_FROM_EMAIL = 'noreply@mystudyapp.com'
+# For production, use SMTP (example with Gmail):
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp.gmail.com"
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = "your-email@gmail.com"
+# EMAIL_HOST_PASSWORD = "your-app-password"
+# DEFAULT_FROM_EMAIL = "your-email@gmail.com"

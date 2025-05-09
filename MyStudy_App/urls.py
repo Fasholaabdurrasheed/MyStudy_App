@@ -21,18 +21,23 @@ from django.views.generic import TemplateView
 from exams import views
 
 
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('exams/', include('exams.urls')),
     path('users/', include('users.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
+
+    
     # Include the default authentication URLs (login, logout, password change, etc.)
     path('', TemplateView.as_view(template_name='home.html'), name='home'),
     path('courses/<int:course_id>/', views.course_detail, name='course_detail'),
     path('inbox/<int:user_id>/', views.view_message, name='view_message'),
     # path('messages/', include('messaging.urls')),
+    # path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('bot/', include('chatbot.urls')),
-
+     
 
 ]
 

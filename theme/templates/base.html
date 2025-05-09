@@ -27,6 +27,10 @@
         .dropdown-menu {
             transition: all 0.3s ease-in-out;
         }
+
+        .settings-dropdown {
+            transition: all 0.3s ease-in-out;
+        }
     </style>
 </head>
 
@@ -38,7 +42,7 @@
                 <span class="text-lg sm:text-xl font-bold tracking-wide">📘 MyStudy App</span>
             </div>
             <!-- Desktop Navigation -->
-            <nav class="hidden md:flex space-x-6">
+            <nav class="hidden md:flex space-x-6 items-center">
                 <a href="{% url 'home' %}" class="hover:text-blue-200">Home</a>
                 <a href="{% url 'exams:my_courses' %}" class="hover:text-blue-200">Courses</a>
                 <a href="{% url 'exams:join_course' %}" class="hover:text-blue-200">Join_Courses</a>
@@ -49,9 +53,11 @@
                 <a href="{% url 'exams:available_exams' course_id=exam_course_id %}"
                     class="hover:text-blue-200">Exams</a>
                 {% endif %}
-
-
                 <a href="{% url 'exams:performance' %}" class="hover:text-blue-200">Performance</a>
+                <a href="{% url 'users:gpa_home' %}" class="hover:text-blue-200">GPA Calculator</a>
+                {% if user.is_staff or user.is_superuser %}
+                <a href="{% url 'exams:admin_dashboard' %}" class="hover:text-blue-200">Admin Dashboard</a>
+                {% endif %}
                 <a href="{% url 'exams:inbox' %}" class="hover:text-blue-200 relative">
                     Messages
                     {% if unread_count > 0 %}
@@ -60,7 +66,24 @@
                     </span>
                     {% endif %}
                 </a>
-                <a href="{% url 'users:profile' %}" class="hover:text-blue-200">Profile</a>
+                <!-- Settings Dropdown -->
+                <div class="relative">
+                    <button id="desktop-settings-toggle" class="hover:text-blue-200 focus:outline-none flex items-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </button>
+                    <div id="desktop-settings-menu" class="settings-dropdown hidden absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg z-50">
+                        <a href="{% url 'users:profile' %}" class="block px-4 py-2 hover:bg-blue-100">Profile</a>
+                        <a href="{% url 'users:password_reset' %}" class="block px-4 py-2 hover:bg-blue-100">Reset Password</a>
+                        <a href="{% url 'users:password_change' %}" class="block px-4 py-2 hover:bg-blue-100">Change Password</a>
+                        <form method="POST" action="{% url 'logout' %}" class="block">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-blue-100">Logout</button>
+                        </form>
+                    </div>
+                </div>
                 {% endif %}
             </nav>
             <!-- Mobile Menu Button -->
@@ -85,12 +108,13 @@
                 {% get_exam_course_id user as exam_course_id %}
                 {% if exam_course_id %}
                 <a href="{% url 'exams:available_exams' course_id=exam_course_id %}"
-                    class="hover:text-blue-200">Exams</a>
+                    class="hover:bg-blue-500 p-2 rounded">Exams</a>
                 {% endif %}
-
-
-
                 <a href="{% url 'exams:performance' %}" class="hover:bg-blue-500 p-2 rounded">Performance</a>
+                <a href="{% url 'users:gpa_home' %}" class="hover:bg-blue-500 p-2 rounded">GPA Calculator</a>
+                {% if user.is_staff or user.is_superuser %}
+                <a href="{% url 'exams:admin_dashboard' %}" class="hover:bg-blue-500 p-2 rounded">Admin Dashboard</a>
+                {% endif %}
                 <a href="{% url 'exams:inbox' %}" class="hover:bg-blue-500 p-2 rounded relative">
                     Messages
                     {% if unread_count > 0 %}
@@ -99,12 +123,25 @@
                     </span>
                     {% endif %}
                 </a>
-                <a href="{% url 'users:profile' %}" class="hover:bg-blue-500 p-2 rounded">Profile</a>
-                <form method="POST" action="{% url 'logout' %}" class="inline">
-                    {% csrf_token %}
-                    <button type="submit" class="hover:bg-red-500 p-2 rounded text-red-200">Logout</button>
-                </form>
-
+                <!-- Mobile Settings Dropdown -->
+                <div class="relative">
+                    <button id="mobile-settings-toggle" class="hover:bg-blue-500 p-2 rounded flex items-center w-full text-left">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Settings
+                    </button>
+                    <div id="mobile-settings-menu" class="settings-dropdown hidden bg-blue-500 text-white rounded-lg mt-1 w-full">
+                        <a href="{% url 'users:profile' %}" class="block px-4 py-2 hover:bg-blue-400">Profile</a>
+                        <a href="{% url 'users:password_reset' %}" class="block px-4 py-2 hover:bg-blue-400">Reset Password</a>
+                        <a href="{% url 'users:password_change' %}" class="block px-4 py-2 hover:bg-blue-400">Change Password</a>
+                        <form method="POST" action="{% url 'logout' %}" class="block">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-blue-400">Logout</button>
+                        </form>
+                    </div>
+                </div>
                 {% else %}
                 <a href="{% url 'login' %}" class="hover:bg-blue-500 p-2 rounded">Login</a>
                 <a href="{% url 'users:signup' %}" class="hover:bg-blue-500 p-2 rounded">Sign Up</a>
@@ -160,6 +197,33 @@
         document.getElementById('menu-toggle').addEventListener('click', () => {
             const mobileMenu = document.getElementById('mobile-menu');
             mobileMenu.classList.toggle('hidden');
+        });
+
+        // Desktop Settings Dropdown Toggle
+        document.getElementById('desktop-settings-toggle').addEventListener('click', () => {
+            const settingsMenu = document.getElementById('desktop-settings-menu');
+            settingsMenu.classList.toggle('hidden');
+        });
+
+        // Mobile Settings Dropdown Toggle
+        document.getElementById('mobile-settings-toggle').addEventListener('click', () => {
+            const settingsMenu = document.getElementById('mobile-settings-menu');
+            settingsMenu.classList.toggle('hidden');
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (event) => {
+            const desktopSettingsMenu = document.getElementById('desktop-settings-menu');
+            const desktopSettingsToggle = document.getElementById('desktop-settings-toggle');
+            const mobileSettingsMenu = document.getElementById('mobile-settings-menu');
+            const mobileSettingsToggle = document.getElementById('mobile-settings-toggle');
+
+            if (!desktopSettingsMenu.contains(event.target) && !desktopSettingsToggle.contains(event.target)) {
+                desktopSettingsMenu.classList.add('hidden');
+            }
+            if (!mobileSettingsMenu.contains(event.target) && !mobileSettingsToggle.contains(event.target)) {
+                mobileSettingsMenu.classList.add('hidden');
+            }
         });
 
         // Chatbot Toggle

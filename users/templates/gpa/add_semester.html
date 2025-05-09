@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Semester</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Hide the default DELETE checkbox */
+        input[name$="-DELETE"] {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-2xl w-full">
+        <h2 class="text-3xl font-bold mb-6 text-gray-800 dark:text-white text-center">Add New Semester</h2>
+
+        <form method="post" class="space-y-6" id="semester-form">
+            {% csrf_token %}
+
+            <!-- Semester Form -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg transition-all duration-300">
+                {{ semester_form.as_p }}
+            </div>
+
+            <!-- Course Formset -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg transition-all duration-300">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Courses</h3>
+                {{ course_formset.management_form }}
+
+                <div id="course-formset">
+                    {% for form in course_formset %}
+                        <div class="mb-4 border-b border-gray-200 dark:border-gray-600 pb-4 course-form flex justify-between items-start">
+                            <div class="flex-1">
+                                {{ form.as_p }}
+                            </div>
+                            <button type="button" onclick="removeCourseForm(this)" class="ml-4 bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">Remove</button>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <button type="button" onclick="addCourseForm()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">➕ Add Course</button>
+            </div>
+
+            <!-- GPA Preview -->
+            <div class="bg-blue-50 dark:bg-gray-800 p-4 rounded-lg shadow-lg text-blue-800 dark:text-blue-300 flex items-center justify-between">
+                <strong>Live GPA:</strong>
+                <span id="gpa-preview" class="text-lg font-medium">0.00</span>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300">Save Semester</button>
+        </form>
+    </div>
+
+    <!-- JavaScript: GPA Calculation + Dynamic Course Management -->
+    <script>
+        const GRADE_POINTS = {
+            'A': 5.0,
+            'B': 4.0,
+            'C': 3.0,
+            'D': 2.0,
+            'E': 1.0,
+            'F': 0.0,
+        };
+
+        function calculateGPA() {
+            const gradeSelects = document.querySelectorAll('select[name$="-grade"]');
+            const unitInputs = document.querySelectorAll('input[name$="-credit_units"]');
+
+            let totalUnits = 0;
+            let totalPoints = 0;
+
+            gradeSelects.forEach((gradeSelect, i) => {
+                const grade = gradeSelect.value;
+                const unitInput = unitInputs[i];
+                const units = parseFloat(unitInput.value) || 0;
+
+                if (GRADE_POINTS.hasOwnProperty(grade)) {
+                    totalUnits += units;
+                    totalPoints += units * GRADE_POINTS[grade];
+                }
+            });
+
+            const gpa = totalUnits > 0 ? (totalPoints / totalUnits).toFixed(2) : "0.00";
+            document.getElementById("gpa-preview").textContent = gpa;
+        }
+
+        document.addEventListener("input", calculateGPA);
+
+        function addCourseForm() {
+            const formsetDiv = document.getElementById("course-formset");
+            const totalFormsInput = document.getElementById("id_form-TOTAL_FORMS");
+            const currentFormCount = parseInt(totalFormsInput.value);
+
+            // Clone the first form as a template
+            const emptyForm = formsetDiv.children[0].cloneNode(true);
+
+            // Clear input/select values
+            emptyForm.querySelectorAll('input, select').forEach(el => {
+                if (el.type !== 'checkbox') {
+                    el.value = '';
+                } else {
+                    el.checked = false;
+                }
+            });
+
+            // Update form index in names and IDs
+            emptyForm.innerHTML = emptyForm.innerHTML.replace(/form-(\d+)-/g, `form-${currentFormCount}-`);
+
+            // Ensure the new form has a Remove button
+            const removeButton = emptyForm.querySelector('button[onclick="removeCourseForm(this)"]');
+            if (!removeButton) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.onclick = function() { removeCourseForm(this); };
+                button.className = 'ml-4 bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition';
+                button.textContent = 'Remove';
+                emptyForm.appendChild(button);
+            }
+
+            formsetDiv.appendChild(emptyForm);
+            totalFormsInput.value = currentFormCount + 1;
+
+            calculateGPA(); // Recalculate GPA after adding a form
+        }
+
+        function removeCourseForm(button) {
+            const courseForm = button.closest('.course-form');
+            const deleteInput = courseForm.querySelector('input[name$="-DELETE"]');
+
+            if (deleteInput) {
+                deleteInput.checked = true; // Mark form for deletion
+            }
+
+            courseForm.style.display = 'none'; // Hide the form
+            calculateGPA(); // Recalculate GPA after removal
+        }
+    </script>
+</body>
+</html>

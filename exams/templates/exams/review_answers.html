@@ -52,6 +52,11 @@
     <a href="{% url 'exams:available_exams' course_id=exam.course.id %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-full transition duration-300">
       Back to Exams
     </a>
+    <a href="{% url 'exams:download_result_pdf' exam.id %}" 
+   class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-full transition duration-300">
+    📄 Download Result as PDF
+</a>
+
   </div>
 </div>
 {% endblock %}
