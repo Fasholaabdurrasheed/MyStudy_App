@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 /**
   * A catch-all path to Django template files, JavaScript, and Python files
@@ -7,4 +10,4 @@
   * If your final CSS file is not being updated after code changes, you may want to broaden or narrow
   * the scope of this path.
   */
-@source "../../../**/*.{html,py,js}";
+
