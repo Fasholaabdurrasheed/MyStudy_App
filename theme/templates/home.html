@@ -44,7 +44,7 @@
         <!-- CBT Practice -->
         {% get_exam_course_id user as exam_course_id %}
         {% if exam_course_id %}
-        <a href="{% url 'exams:available_exams' course_id=exam_course_id %}"
+        <a href="{% url 'exams:available_exams' %}"
             class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
             <div class="flex items-center mb-4">
                 <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

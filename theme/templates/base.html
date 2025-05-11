@@ -14,6 +14,7 @@
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <link rel="apple-touch-icon" href="{% static 'icons/icon-192.png' %}">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         #chat-body::-webkit-scrollbar {
             width: 6px;
@@ -30,6 +31,15 @@
 
         .settings-dropdown {
             transition: all 0.3s ease-in-out;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -50,8 +60,7 @@
                 <a href="{% url 'exams:materials' %}" class="hover:text-blue-200">Materials</a>
                 {% get_exam_course_id user as exam_course_id %}
                 {% if exam_course_id %}
-                <a href="{% url 'exams:available_exams' course_id=exam_course_id %}"
-                    class="hover:text-blue-200">Exams</a>
+                <a href="{% url 'exams:available_exams' %}" class="hover:text-blue-200">Exams</a>
                 {% endif %}
                 <a href="{% url 'exams:performance' %}" class="hover:text-blue-200">Performance</a>
                 <a href="{% url 'users:gpa_home' %}" class="hover:text-blue-200">GPA Calculator</a>
@@ -75,12 +84,13 @@
                         </svg>
                     </button>
                     <div id="desktop-settings-menu" class="settings-dropdown hidden absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg z-50">
-                        <a href="{% url 'users:profile' %}" class="block px-4 py-2 hover:bg-blue-100">Profile</a>
-                        <a href="{% url 'users:password_reset' %}" class="block px-4 py-2 hover:bg-blue-100">Reset Password</a>
-                        <a href="{% url 'users:password_change' %}" class="block px-4 py-2 hover:bg-blue-100">Change Password</a>
+                        <a href="{% url 'users:profile' %}" class="block px-4 py-2 hover:bg-blue-100 transition">View Profile</a>
+                        <a href="{% url 'users:profile_edit' %}" class="block px-4 py-2 hover:bg-blue-100 transition">Edit Profile</a>
+                        <a href="{% url 'users:password_reset' %}" class="block px-4 py-2 hover:bg-blue-100 transition">Reset Password</a>
+                        <a href="{% url 'users:password_change' %}" class="block px-4 py-2 hover:bg-blue-100 transition">Change Password</a>
                         <form method="POST" action="{% url 'logout' %}" class="block">
                             {% csrf_token %}
-                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-blue-100">Logout</button>
+                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-blue-100 transition">Logout</button>
                         </form>
                     </div>
                 </div>
@@ -89,10 +99,8 @@
             <!-- Mobile Menu Button -->
             <div class="md:hidden">
                 <button id="menu-toggle" class="focus:outline-none">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16m-7 6h7"></path>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
                     </svg>
                 </button>
             </div>
@@ -107,8 +115,7 @@
                 <a href="{% url 'exams:materials' %}" class="hover:bg-blue-500 p-2 rounded">Materials</a>
                 {% get_exam_course_id user as exam_course_id %}
                 {% if exam_course_id %}
-                <a href="{% url 'exams:available_exams' course_id=exam_course_id %}"
-                    class="hover:bg-blue-500 p-2 rounded">Exams</a>
+                <a href="{% url 'exams:available_exams' %}" class="hover:bg-blue-500 p-2 rounded">Exams</a>
                 {% endif %}
                 <a href="{% url 'exams:performance' %}" class="hover:bg-blue-500 p-2 rounded">Performance</a>
                 <a href="{% url 'users:gpa_home' %}" class="hover:bg-blue-500 p-2 rounded">GPA Calculator</a>
@@ -133,12 +140,13 @@
                         Settings
                     </button>
                     <div id="mobile-settings-menu" class="settings-dropdown hidden bg-blue-500 text-white rounded-lg mt-1 w-full">
-                        <a href="{% url 'users:profile' %}" class="block px-4 py-2 hover:bg-blue-400">Profile</a>
-                        <a href="{% url 'users:password_reset' %}" class="block px-4 py-2 hover:bg-blue-400">Reset Password</a>
-                        <a href="{% url 'users:password_change' %}" class="block px-4 py-2 hover:bg-blue-400">Change Password</a>
+                        <a href="{% url 'users:profile' %}" class="block px-4 py-2 hover:bg-blue-400 transition">View Profile</a>
+                        <a href="{% url 'users:profile_edit' %}" class="block px-4 py-2 hover:bg-blue-400 transition">Edit Profile</a>
+                        <a href="{% url 'users:password_reset' %}" class="block px-4 py-2 hover:bg-blue-400 transition">Reset Password</a>
+                        <a href="{% url 'users:password_change' %}" class="block px-4 py-2 hover:bg-blue-400 transition">Change Password</a>
                         <form method="POST" action="{% url 'logout' %}" class="block">
                             {% csrf_token %}
-                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-blue-400">Logout</button>
+                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-blue-400 transition">Logout</button>
                         </form>
                     </div>
                 </div>

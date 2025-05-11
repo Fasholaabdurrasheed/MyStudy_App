@@ -9,7 +9,9 @@ app_name = 'users'
 
 urlpatterns = [
     path('signup/', signup_view, name='signup'),
+     path('signup/success/', views.signup_success, name='signup_success'),
     path('profile/', profile_view, name='profile'),
+    path('profile/edit/', views.profile_edit, name='profile_edit'),
     path('login/', LoginView.as_view(template_name='users/login.html'), name='login'),
     # PASSWORD RESET
     path("password/change/", views.password_change, name="password_change"),

@@ -154,16 +154,16 @@ LOGIN_REDIRECT_URL = '/exams/join-course/'  # Redirect to the my_courses view af
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 TAILWIND_APP_NAME = 'theme'
+TAILWIND_CSS_PATH = 'static/css/tailwind.css'
 INTERNAL_IPS = ['127.0.0.1']  # for live reload
 NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Console output for testing
-DEFAULT_FROM_EMAIL = 'noreply@mystudyapp.com'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Console output for testing
+DEFAULT_FROM_EMAIL = 'mystudyapp.unilorin@gmail.com'
 # For production, use SMTP (example with Gmail):
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "smtp.gmail.com"
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "your-email@gmail.com"
-# EMAIL_HOST_PASSWORD = "your-app-password"
-# DEFAULT_FROM_EMAIL = "your-email@gmail.com"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")

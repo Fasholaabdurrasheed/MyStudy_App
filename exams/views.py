@@ -214,21 +214,22 @@ def course_detail(request, course_id):
     })
 
 @login_required
-def available_exams(request, course_id):
-    course = get_object_or_404(Course, id=course_id)
-
-    # Check enrollment
-    if not CourseEnrollment.objects.filter(user=request.user, course=course).exists():
-        return render(request, 'exams/error.html', {
-            'message': 'You are not enrolled in this course.'
-        })
-
-    exams = CourseExam.objects.filter(course=course)
+def available_exams(request):
+    # Get all courses the user is enrolled in
+    enrolled_courses = CourseEnrollment.objects.filter(user=request.user).values_list('course', flat=True)
+    courses = Course.objects.filter(id__in=enrolled_courses)
+    
+    # Get all exams for enrolled courses
+    exams = CourseExam.objects.filter(course__in=courses)
+    
+    # Prepare data for template (group exams by course if needed)
+    course_exams = {}
+    for course in courses:
+        course_exams[course] = exams.filter(course=course)
+    
     return render(request, 'exams/available_exams.html', {
-        'course': course,
-        'exams': exams,
+        'course_exams': course_exams,
     })
-
 
 @login_required
 def start_exam(request, exam_id):

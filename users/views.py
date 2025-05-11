@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from .models import GPASemester, CourseGrade
-from .forms import GPASemesterForm, CourseGradeForm, PasswordChangeForm, PasswordResetRequestForm, PasswordResetConfirmForm
+from .forms import GPASemesterForm, CourseGradeForm, PasswordChangeForm, PasswordResetRequestForm, PasswordResetConfirmForm, CustomUserCreationForm, UserProfileForm
 from django.forms import modelformset_factory
 import plotly.graph_objects as go
 import plotly
@@ -17,25 +17,47 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.conf import settings
+from django.core.mail import send_mail
 
 def signup_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Profile is created automatically via post_save signal
+            send_mail(
+    'Welcome to MyStudy_App!',
+    f'Hello {user.first_name}, your account was created successfully!',
+    'mystudyapp.unilorin@gmail.com',
+    [user.email],
+    fail_silently=False,
+)
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=password)
             login(request, user)
-            return redirect('exams:inbox')  # Redirect to inbox after signup
+            return redirect('users:signup_success')  # Redirect to success view
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, 'users/signup.html', {'form': form})
+
+def signup_success(request):
+    return render(request, 'users/signup_success.html')
 
 @login_required
 def profile_view(request):
     return render(request, 'users/profile.html', {'user': request.user})
+
+@login_required
+def profile_edit(request):
+    profile = request.user.profile
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('users:profile')  # Redirect to profile view after saving
+    else:
+        form = UserProfileForm(instance=profile)
+    return render(request, 'users/profile_edit.html', {'form': form})
 
 
 def gpa_home(request):

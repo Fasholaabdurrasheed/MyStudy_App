@@ -1,11 +1,26 @@
 {% extends 'base.html' %}
-{% block title %}Profile{% endblock %}
+{% load static %}
+{% block title %}Your Profile{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">Profile</h1>
-    <p>Username: {{ user.username }}</p>
-    <p>First Name: {{ user.first_name }}</p>
-    <p>Last Name: {{ user.last_name }}</p>
-    <p>Email: {{ user.email }}</p>
+<div class="flex justify-center items-center min-h-screen bg-gray-100">
+    <div class="bg-white shadow-xl rounded-lg p-8 w-full max-w-md animate-fade-in">
+        <h2 class="text-3xl font-bold text-center text-blue-700 mb-8">Your Profile</h2>
+        <div class="text-center mb-6">
+            {% if user.profile.profile_image %}
+                <img src="{{ user.profile.profile_image.url }}" alt="Profile Image" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover">
+            {% else %}
+                <img src="{% static 'default_avatar.png' %}" alt="Default Avatar" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover">
+            {% endif %}
+            <h3 class="text-xl font-semibold text-gray-800">{{ user.first_name|default:user.username }}</h3>
+            <p class="text-gray-600">{{ user.email }}</p>
+            <p class="text-gray-600 capitalize">{{ user.profile.user_type }}</p>
+        </div>
+        <div class="text-left mb-6">
+            <h4 class="text-lg font-medium text-gray-700 mb-2">Bio</h4>
+            <p class="text-gray-600">{{ user.profile.bio|default:"No bio provided" }}</p>
+        </div>
+        <a href="{% url 'users:profile_edit' %}" class="block w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-300 text-lg font-semibold text-center">Edit Profile</a>
+    </div>
 </div>
 {% endblock %}

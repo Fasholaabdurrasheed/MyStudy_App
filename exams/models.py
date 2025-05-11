@@ -142,7 +142,7 @@ class ExamSubmission(models.Model):
         unique_together = ('user', 'exam')
 
     def __str__(self):
-        return f"{self.user.username} - {self.exam.title}"
+        return f"{self.user.username} - {self.exam.name}"
 
 
 class PastQuestionFile(models.Model):

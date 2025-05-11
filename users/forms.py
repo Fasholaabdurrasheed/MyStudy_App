@@ -1,7 +1,8 @@
 from django import forms
 from exams.models import Message
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import GPASemester, CourseGrade
+from .models import GPASemester, CourseGrade, UserProfile
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 
@@ -104,3 +105,68 @@ class PasswordResetConfirmForm(forms.Form):
         if new_password1:
             validate_password(new_password1)
         return new_password2
+    
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500', 'placeholder': 'Enter your email'})
+    )
+    first_name = forms.CharField(
+        required=True,
+        max_length=30,
+        widget=forms.TextInput(attrs={'class': 'w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500', 'placeholder': 'Enter your first name'})
+    )
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'email', 'password1', 'password2')
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("This email is already in use.")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        user.first_name = self.cleaned_data['first_name']
+        if commit:
+            user.save()
+        return user
+
+class UserProfileForm(forms.ModelForm):
+    first_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500', 'placeholder': 'Enter your first name'})
+    )
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500', 'placeholder': 'Enter your email'})
+    )
+
+    class Meta:
+        model = UserProfile
+        fields = ('profile_image', 'bio', 'user_type')
+        widgets = {
+            'bio': forms.Textarea(attrs={'class': 'w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500', 'rows': 4, 'placeholder': 'Tell us about yourself'}),
+            'user_type': forms.Select(attrs={'class': 'w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500'}),
+            'profile_image': forms.FileInput(attrs={'class': 'w-full border border-gray-300 rounded p-2'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.user:
+            self.fields['first_name'].initial = self.instance.user.first_name
+            self.fields['email'].initial = self.instance.user.email
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        user = profile.user
+        user.first_name = self.cleaned_data['first_name']
+        user.email = self.cleaned_data['email']
+        if commit:
+            user.save()
+            profile.save()
+        return profile
