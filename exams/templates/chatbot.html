@@ -5,40 +5,203 @@
 <div class="max-w-2xl mx-auto mt-20 p-6 bg-white rounded-lg shadow-lg border">
     <h2 class="text-2xl font-bold mb-4 text-blue-700">🤖 Chat with StudyBot</h2>
 
-    <div id="chat-window" class="h-96 overflow-y-auto mb-4 p-3 bg-gray-100 rounded text-sm border border-gray-300">
-        <!-- Chat messages appear here -->
+    <div id="chat-window" class="h-96 overflow-y-auto mb-4 p-3 bg-gray-100 rounded text-sm border border-gray-300 space-y-2" role="log" aria-live="polite" aria-relevant="additions">
+        <!-- Chat messages will appear here -->
+
+        <!-- Typing Indicator -->
+        <div id="typing-indicator" class="hidden flex items-center gap-2 text-gray-500 text-sm" aria-live="assertive">
+            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:.15s]"></div>
+            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:.3s]"></div>
+            <span>StudyBot is typing...</span>
+        </div>
     </div>
 
-    <div class="flex gap-2">
-        <input id="chat-input" type="text" placeholder="Ask about courses, exams, or study tips..." class="flex-1 p-2 border rounded text-sm" />
-        <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm">Send</button>
+    <div class="flex gap-2 items-center">
+        <button id="voiceBtn" title="Speak your question" aria-label="Start voice input" class="bg-gray-300 hover:bg-gray-400 p-2 rounded text-gray-700">
+            🎤
+        </button>
+        <input id="chat-input" type="text" placeholder="Ask about courses, exams, or study tips..." class="flex-1 p-2 border rounded text-sm" aria-label="Chat input" />
+        <button id="sendBtn" class="bg-blue-600 text-white px-4 py-2 rounded text-sm" aria-label="Send message">➤</button>
     </div>
+    <div class="mt-2 text-sm text-gray-700 flex items-center gap-2">
+    <label for="voiceToggle">🔈 Voice Output:</label>
+    <input type="checkbox" id="voiceToggle" checked />
+</div>
 </div>
 
-<script>
-    async function sendMessage() {
-        const input = document.getElementById("chat-input");
-        const chatWindow = document.getElementById("chat-window");
+<!-- MathJax for rendering LaTeX -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
 
+<script>
+    const input = document.getElementById("chat-input");
+    const chatWindow = document.getElementById("chat-window");
+    const sendBtn = document.getElementById("sendBtn");
+    const typingIndicator = document.getElementById("typing-indicator");
+    const voiceBtn = document.getElementById("voiceBtn");
+
+    sendBtn.onclick = sendMessage;
+    input.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") sendMessage();
+    });
+
+    // Voice control state
+    let recognition;
+    let recognizing = false;
+    let voiceOutputEnabled = true;
+
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            recognizing = true;
+            voiceBtn.classList.add("bg-blue-500", "text-white");
+            voiceBtn.textContent = "🛑"; // Indicates you can click to stop
+        };
+
+        recognition.onend = () => {
+            recognizing = false;
+            voiceBtn.classList.remove("bg-blue-500", "text-white");
+            voiceBtn.textContent = "🎤";
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Speech recognition error:", event.error);
+            recognition.stop();
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            input.value = transcript;
+            sendMessage();
+        };
+    } else {
+        voiceBtn.disabled = true;
+        voiceBtn.title = "Voice input not supported in this browser";
+    }
+
+    // Toggle voice input
+    voiceBtn.onclick = () => {
+        if (!recognition) return;
+        if (recognizing) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+    };
+    // Toggle switch for voice output
+    document.getElementById("voiceToggle").addEventListener("change", function () {
+        voiceOutputEnabled = this.checked;
+        if (!this.checked) speechSynthesis.cancel();
+    });
+
+    async function sendMessage() {
         const userMessage = input.value.trim();
         if (!userMessage) return;
 
-        chatWindow.innerHTML += `<div class="mb-2"><strong>You:</strong> ${userMessage}</div>`;
+        chatWindow.innerHTML += `
+            <div class="flex justify-end" role="article" aria-label="User message">
+                <div class="bg-green-100 text-gray-800 px-4 py-2 rounded-lg max-w-xs break-words">${escapeHtml(userMessage)}</div>
+            </div>`;
         input.value = "";
-
-        const response = await fetch("{% url 'chatbot_response' %}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
-            body: JSON.stringify({ message: userMessage })
-        });
-
-        const data = await response.json();
-        const botMessage = data.response || "Sorry, something went wrong.";
-        chatWindow.innerHTML += `<div class="mb-2 text-blue-700"><strong>StudyBot:</strong> ${botMessage}</div>`;
         chatWindow.scrollTop = chatWindow.scrollHeight;
+
+        typingIndicator.classList.remove("hidden");
+
+        try {
+            const response = await fetch("{% url 'chatbot_response' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ message: userMessage })
+            });
+
+            const data = await response.json();
+            let botMessage = data.response || "Sorry, something went wrong.";
+
+            // Handle embedded base64 images
+            let imageHTML = '';
+            const imagePattern = /\[\[IMAGE:(.*?)\]\]/g;
+            let match;
+            while ((match = imagePattern.exec(botMessage)) !== null) {
+                const base64Image = match[1];
+                imageHTML += `<div class="mt-2"><img src="data:image/png;base64,${base64Image}" class="max-w-full border rounded shadow" alt="Equation Graph"/></div>`;
+            }
+            botMessage = botMessage.replace(imagePattern, '');
+
+            // LaTeX rendering
+            const latexBlocks = botMessage.match(/\$\$.*?\$\$/gs);
+            let safeHTML = "";
+            if (latexBlocks) {
+                let parts = botMessage.split(/\$\$.*?\$\$/gs);
+                for (let i = 0; i < parts.length; i++) {
+                    safeHTML += escapeHtml(parts[i]);
+                    if (i < latexBlocks.length) {
+                        safeHTML += latexBlocks[i];
+                    }
+                }
+            } else {
+                safeHTML = escapeHtml(botMessage);
+            }
+
+            chatWindow.innerHTML += `
+                <div class="flex justify-start" role="article" aria-label="StudyBot message">
+                    <div class="bg-blue-100 text-gray-800 px-4 py-2 rounded-lg max-w-xs whitespace-pre-wrap break-words">
+                        ${safeHTML}
+                    </div>
+                </div>
+                ${imageHTML}`;
+
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+
+            if (voiceOutputEnabled) {
+                speak(stripLatex(botMessage));
+            }
+        } catch (error) {
+            chatWindow.innerHTML += `
+                <div class="flex justify-start text-sm text-red-600">Error fetching response.</div>`;
+        } finally {
+            typingIndicator.classList.add("hidden");
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function stripLatex(text) {
+        return text
+            .replace(/\$\$(.*?)\$\$/gs, '$1')
+            .replace(/\\(frac|sqrt|sum|int|left|right|begin|end|times|cdot|text|displaystyle)[^{]*{([^}]*)}/g, '$2')
+            .replace(/\\[a-zA-Z]+/g, '')
+            .replace(/[\{\}]/g, '')
+            .replace(/_/g, ' ')
+            .replace(/\^/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function speak(text) {
+        if (!('speechSynthesis' in window)) return;
+
+        speechSynthesis.cancel(); // Stop any ongoing speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        speechSynthesis.speak(utterance);
     }
 </script>
 {% endblock %}

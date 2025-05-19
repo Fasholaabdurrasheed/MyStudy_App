@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.validators import RegexValidator
+from django.utils import timezone
 
 def user_profile_path(instance, filename):
     return f'profile_images/user_{instance.user.id}/{filename}'
@@ -55,3 +57,29 @@ class CourseGrade(models.Model):
     course_name = models.CharField(max_length=100)
     grade = models.CharField(max_length=1, choices=GRADE_CHOICES)
     credit_units = models.PositiveIntegerField()
+
+class LiveClass(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    meet_link = models.URLField(
+        validators=[
+            RegexValidator(
+                regex=r'^https://meet\.google\.com/[a-z]{3}-[a-z]{4}-[a-z]{3}$',
+                message='Enter a valid Google Meet link (e.g., https://meet.google.com/abc-defg-hij)',
+            )
+        ]
+    )
+    scheduled_at = models.DateTimeField()
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return self.title
+
+    def get_status(self):
+        now = timezone.now()
+        if now < self.scheduled_at:
+            return "Upcoming"
+        elif now < self.scheduled_at + timezone.timedelta(hours=1):  # Assume 1-hour duration
+            return "Live"
+        else:
+            return "Ended"

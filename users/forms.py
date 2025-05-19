@@ -2,9 +2,11 @@ from django import forms
 from exams.models import Message
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import GPASemester, CourseGrade, UserProfile
+from .models import GPASemester, CourseGrade, UserProfile, LiveClass
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+import pytz
+from django.utils import timezone
 
 
 class MessageForm(forms.ModelForm):
@@ -170,3 +172,26 @@ class UserProfileForm(forms.ModelForm):
             user.save()
             profile.save()
         return profile
+    
+class LiveClassForm(forms.ModelForm):
+    class Meta:
+        model = LiveClass
+        fields = ['title', 'description', 'meet_link', 'scheduled_at']
+        widgets = {
+            'scheduled_at': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'mt-1 block w-full border-gray-300 rounded-lg'}),
+            'description': forms.Textarea(attrs={'rows': 4, 'class': 'mt-1 block w-full border-gray-300 rounded-lg'}),
+            'title': forms.TextInput(attrs={'class': 'mt-1 block w-full border-gray-300 rounded-lg'}),
+            'meet_link': forms.URLInput(attrs={'class': 'mt-1 block w-full border-gray-300 rounded-lg'}),
+        }
+
+    def clean_scheduled_at(self):
+        scheduled_at = self.cleaned_data['scheduled_at']
+        print(f"Raw scheduled_at: {scheduled_at}")  # Debug
+        wat_timezone = pytz.timezone('Africa/Lagos')
+        if not timezone.is_aware(scheduled_at):
+            scheduled_at = wat_timezone.localize(scheduled_at)
+        scheduled_at_utc = scheduled_at.astimezone(pytz.UTC)
+        print(f"Converted to UTC: {scheduled_at_utc}")  # Debug
+        if scheduled_at_utc < timezone.now():
+            raise forms.ValidationError("Cannot schedule a class in the past.")
+        return scheduled_at_utc

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+{% load tz %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg">
+  <h2 class="text-3xl font-bold text-gray-800 mb-6">Live Classes</h2>
+  {% if messages %}
+    <div class="mb-4">
+      {% for message in messages %}
+        <div class="text-white px-4 py-2 rounded {{ message.tags }} {% if message.tags == 'error' %}bg-red-500{% elif message.tags == 'success' %}bg-green-500{% else %}bg-yellow-500{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="mb-6 text-gray-600">
+    <p><strong>How to Join:</strong> Click the "Join Class" button when the class is live. Ensure you have a Google account and a stable internet connection.</p>
+  </div>
+
+  {% if classes %}
+    <div class="space-y-4">
+      {% for class in classes %}
+        <div class="p-4 border rounded-lg bg-gray-50">
+          <h3 class="text-xl font-semibold text-gray-800">{{ class.title }}</h3>
+          <p class="text-gray-600">{{ class.description|truncatewords:20 }}</p>
+          {% timezone "Africa/Lagos" %}
+          <p class="text-sm text-gray-500">Scheduled: {{ class.scheduled_at|date:"F d, Y, h:i A" }}</p>
+          {% endtimezone %}
+          <p class="text-sm text-gray-500">Status: 
+            <span class="{% if class.get_status == 'Live' %}text-green-600{% elif class.get_status == 'Upcoming' %}text-blue-600{% else %}text-red-600{% endif %}">
+              {{ class.get_status }}
+            </span>
+          </p>
+          {% if class.get_status == "Live" %}
+            <a href="{{ class.meet_link }}" target="_blank" class="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+              Join Class
+            </a>
+          {% elif class.get_status == "Upcoming" %}
+            <p class="text-sm text-gray-500 mt-2">Starts in: <span class="countdown" data-time="{{ class.scheduled_at|date:'c' }}"></span></p>
+            <!-- Debug output -->
+            
+          {% else %}
+            <p class="text-sm text-gray-500 mt-2">This class has ended.</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-gray-600">No live classes scheduled.</p>
+  {% endif %}
+
+  {% if request.user.is_staff %}
+    <div class="mt-6">
+      <a href="{% url 'users:create_live_class' %}" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+        Create New Class
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  document.querySelectorAll('.countdown').forEach(element => {
+    const targetTime = new Date(element.dataset.time); // UTC time, e.g., 2025-05-13T14:00:00+00:00
+    console.log('Target Time:', targetTime); // Debug
+    const updateCountdown = () => {
+      const now = new Date();
+      console.log('Now:', now, 'Diff:', targetTime - now); // Debug
+      const diff = targetTime.getTime() - now.getTime();
+      if (diff <= 0) {
+        element.textContent = "Started";
+        clearInterval(interval);
+        // Instead of reload, update UI directly
+        element.closest('.p-4').querySelector('p.text-sm.text-gray-500.mt-2').innerHTML = 
+          '<a href="' + element.closest('.p-4').querySelector('a[href*="meet.google.com"]')?.href + 
+          '" target="_blank" class="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Join Class</a>';
+        return;
+      }
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      element.textContent = `${hours}h ${minutes}m ${seconds}s`;
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+  });
+</script>
+{% endblock %}

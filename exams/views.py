@@ -429,13 +429,18 @@ def inbox(request):
 
     unread_count = Message.objects.filter(receiver=user, is_read=False).count()
 
+    # Fetch all users except the current user for the empty state
+    available_users = User.objects.exclude(id=user.id)
+
     return render(request, 'messaging/inbox.html', {
         'messages': sorted_conversations,
         'unread_count': unread_count,
         'total_count': len(sorted_conversations),
         'active_user': user,
+        'available_users': available_users,  # New context variable
     })
 
+# Other views remain unchanged
 @login_required
 def chat_view(request, username):
     tutor = get_object_or_404(User, username=username)
@@ -449,7 +454,7 @@ def chat_view(request, username):
             message = form.save(commit=False)
             message.sender = request.user
             message.receiver = tutor
-            message.is_read = False  # Ensure new messages are marked unread
+            message.is_read = False
             message.save()
             return redirect('exams:chat_view', username=tutor.username)
     else:
@@ -460,20 +465,13 @@ def chat_view(request, username):
         'messages': messages,
         'tutor': tutor
     })
+
 @login_required
 def tutor_list(request):
     try:
         tutor_group = Group.objects.get(name="Tutor")
     except Group.DoesNotExist:
-        # Optionally create the group if it doesn't exist
         tutor_group = Group.objects.create(name="Tutor")
-        # Or return an empty list with a message
-        # return render(request, 'messaging/tutor_list.html', {
-        #     'tutors': [],
-        #     'query': '',
-        #     'filter_my_chats': False,
-        #     'error': 'No tutors available. The Tutor group does not exist.'
-        # })
 
     query = request.GET.get("q", "")
     filter_my_chats = request.GET.get("mine") == "1"
@@ -491,7 +489,6 @@ def tutor_list(request):
         chatted_ids = Message.objects.filter(sender=request.user).values_list('receiver', flat=True).distinct()
         tutors = tutors.filter(id__in=chatted_ids)
 
-    # Attach latest message preview
     tutor_data = []
     for tutor in tutors:
         last_message = Message.objects.filter(
@@ -512,14 +509,11 @@ def tutor_list(request):
 @login_required
 def view_message(request, user_id):
     other_user = get_object_or_404(User, id=user_id)
-
-    # Messages between the current user and the other user
     messages = Message.objects.filter(
         sender__in=[request.user, other_user],
         receiver__in=[request.user, other_user]
     ).order_by('timestamp')
 
-    # Mark received messages as read
     messages.filter(receiver=request.user, is_read=False).update(is_read=True)
 
     if request.method == 'POST':
@@ -538,9 +532,6 @@ def view_message(request, user_id):
         'messages': messages,
         'form': form,
     })
-
-    
-
 @staff_member_required
 def bulk_upload_questions(request, exam_id):
     exam = CourseExam.objects.get(id=exam_id)
@@ -734,6 +725,7 @@ def custom_admin_dashboard(request):
     }
 
     return render(request, 'admin_dashboard/dashboard_home.html', context)
+
 @login_required
 def download_result_pdf(request, exam_id):
     exam = get_object_or_404(CourseExam, id=exam_id)

@@ -1,0 +1,18 @@
+{% extends "emails/base_email.html" %}
+{% load tz %}
+
+{% block content %}
+  <h2>New Live Class Scheduled</h2>
+  <p>Hello {{ recipient_name }},</p>
+  <p>We’re excited to inform you about a new live class scheduled on MyStudy App. Join us to enhance your learning experience!</p>
+  <div class="details">
+    <p><strong>Class Title:</strong> {{ class_title }}</p>
+    {% timezone "Africa/Lagos" %}
+    <p><strong>Scheduled Time:</strong> {{ scheduled_at|date:"F d, Y, h:i A" }} WAT</p>
+    {% endtimezone %}
+    <p><strong>Google Meet Link:</strong> <a href="{{ meet_link }}">{{ meet_link }}</a></p>
+  </div>
+  <a href="{{ meet_link }}" class="button">Join Class</a>
+  <p>Please ensure you have a Google account and a stable internet connection to participate.</p>
+  <p>If you have any questions, feel free to reach out to our support team.</p>
+{% endblock %}

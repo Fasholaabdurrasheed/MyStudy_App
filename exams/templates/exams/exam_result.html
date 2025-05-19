@@ -34,7 +34,7 @@
 
     <!-- Action Buttons -->
     <div class="flex flex-col md:flex-row justify-center gap-4 mt-6">
-      <a href="{% url 'exams:available_exams' course_id=exam.course.id %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-full transition duration-300">
+      <a href="{% url 'exams:available_exams' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-full transition duration-300">
         Back to Exams
       </a>
       <a href="{% url 'exams:review_answers' exam_id=exam_id %}" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-full transition duration-300">

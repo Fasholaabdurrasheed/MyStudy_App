@@ -1,0 +1,14 @@
+Hello {{ recipient_name }},
+
+A new live class has been scheduled on MyStudy App.
+
+Class Title: {{ class_title }}
+Scheduled Time: {{ scheduled_at|date:"F d, Y, h:i A" }} WAT
+Google Meet Link: {{ meet_link }}
+
+Please ensure you have a Google account and a stable internet connection to participate.
+
+If you have any questions, contact us at support@mystudyapp.com.
+
+Best,
+The MyStudy App Team

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg">
+  <h2 class="text-3xl font-bold text-gray-800 mb-6">Create Live Class</h2>
+  {% if messages %}
+    <div class="mb-4">
+      {% for message in messages %}
+        <div class="text-white px-4 py-2 rounded {{ message.tags }} {% if message.tags == 'error' %}bg-red-500{% elif message.tags == 'success' %}bg-green-500{% else %}bg-yellow-500{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% if form.errors %}
+    <div class="mb-4 text-red-600">
+      <p>Please correct the following errors:</p>
+      <ul>
+        {% for field in form %}
+          {% for error in field.errors %}
+            <li>{{ field.label }}: {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Class Title</label>
+      {{ form.title }}
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Description</label>
+      {{ form.description }}
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Google Meet Link</label>
+      {{ form.meet_link }}
+      <p class="text-sm text-gray-500 mt-1">Generate a link from <a href="https://meet.google.com/" target="_blank" class="text-blue-600">Google Meet</a>.</p>
+    </div>
+    <div>
+      <label for="{{ form.scheduled_at.id_for_label }}">Scheduled Time (WAT):</label>
+{{ form.scheduled_at }}
+      <p class="text-sm text-gray-500 mt-1">Select the date and time for the class.</p>
+    </div>
+    <div class="flex justify-end">
+      <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+        Create Class
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

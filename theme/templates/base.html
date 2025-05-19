@@ -14,7 +14,9 @@
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <link rel="apple-touch-icon" href="{% static 'icons/icon-192.png' %}">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
+
+
     <style>
         #chat-body::-webkit-scrollbar {
             width: 6px;
@@ -57,7 +59,8 @@
                 <a href="{% url 'exams:my_courses' %}" class="hover:text-blue-200">Courses</a>
                 <a href="{% url 'exams:join_course' %}" class="hover:text-blue-200">Join_Courses</a>
                 {% if user.is_authenticated %}
-                <a href="{% url 'exams:materials' %}" class="hover:text-blue-200">Materials</a>
+                <a href="{% url 'chatbot_ui' %}" class="hover:text-blue-200">AI</a>
+                <a href="{% url 'users:live_classes' %}" class="hover:text-blue-200">Live_Class</a>
                 {% get_exam_course_id user as exam_course_id %}
                 {% if exam_course_id %}
                 <a href="{% url 'exams:available_exams' %}" class="hover:text-blue-200">Exams</a>
@@ -112,7 +115,8 @@
                 <a href="{% url 'exams:my_courses' %}" class="hover:bg-blue-500 p-2 rounded">Courses</a>
                 <a href="{% url 'exams:join_course' %}" class="hover:bg-blue-500 p-2 rounded">Join_Courses</a>
                 {% if user.is_authenticated %}
-                <a href="{% url 'exams:materials' %}" class="hover:bg-blue-500 p-2 rounded">Materials</a>
+                <a href="{% url 'chatbot_ui' %}" class="hover:bg-blue-500 p-2 rounded">AI</a>
+                <a href="{% url 'users:live_classes' %}" class="hover:bg-blue-500 p-2 rounded">Live_Class</a>
                 {% get_exam_course_id user as exam_course_id %}
                 {% if exam_course_id %}
                 <a href="{% url 'exams:available_exams' %}" class="hover:bg-blue-500 p-2 rounded">Exams</a>
@@ -183,22 +187,40 @@
         © {{ now|date:"Y" }} MyStudy App. All rights reserved.
     </footer>
 
-    <!-- Chatbot Widget -->
-    <div id="chatbot-container"
-        class="fixed bottom-5 right-5 w-80 bg-white shadow-lg rounded-lg p-4 border border-gray-300 hidden">
-        <div class="font-bold text-lg mb-2 text-blue-600">🤖 StudyBot</div>
-        <div id="chat-window" class="h-64 overflow-y-auto mb-2 p-2 bg-gray-100 rounded text-sm"></div>
-        <input id="chat-input" type="text" placeholder="Ask something..." class="w-full p-2 border rounded text-sm" />
-        <button onclick="sendMessage()"
-            class="mt-2 w-full bg-blue-600 text-white px-3 py-1 rounded text-sm">Send</button>
+    <!-- Floating Chatbot Button -->
+<button id="chat-toggle" class="fixed bottom-5 right-5 bg-blue-600 text-white p-3 rounded-full shadow-lg z-50 hover:bg-blue-700">
+    💬
+</button>
+
+<!-- Chatbot Popup -->
+<div id="chat-popup" class="hidden fixed bottom-20 right-5 w-80 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+    <div class="p-2 bg-blue-600 text-white font-semibold rounded-t-lg">StudyBot Assistant</div>
+    <div id="chat-log" class="p-3 h-64 overflow-y-auto text-sm space-y-2" role="log" aria-live="polite" aria-relevant="additions">
+        <!-- Chat messages will appear here -->
+        <!-- Typing Indicator -->
+        <div id="typing-indicator" class="hidden flex items-center gap-2 text-gray-500 text-sm" aria-live="assertive">
+            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:.15s]"></div>
+            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:.3s]"></div>
+            <span>StudyBot is typing...</span>
+        </div>
     </div>
+    <div class="flex border-t border-gray-200 items-center gap-2 p-2">
+        <button id="voice-btn" title="Speak your question" aria-label="Start voice input" class="bg-gray-300 hover:bg-gray-400 p-2 rounded text-gray-700">
+            🎤
+        </button>
+        <input type="text" id="user-input" class="flex-grow p-2 text-sm outline-none border rounded" placeholder="Ask me something..." aria-label="Chat input">
+        <button id="send-btn" class="bg-blue-500 text-white px-3 hover:bg-blue-600 rounded" aria-label="Send message">➤</button>
+    </div>
+    <div class="p-2 text-sm text-gray-700 flex items-center gap-2">
+        <label for="voice-toggle">🔈 Voice Output:</label>
+        <input type="checkbox" id="voice-toggle" checked />
+    </div>
+</div>
 
-    <!-- Chatbot Toggle Button -->
-    <button id="chat-toggle"
-        class="fixed bottom-6 right-6 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700">
-        💬
-    </button>
-
+<!-- MathJax for rendering LaTeX -->
+<script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <!-- Scripts -->
     <script>
         // Mobile Menu Toggle
@@ -249,31 +271,195 @@
             });
         }
 
-        // Chatbot Functionality
-        async function sendMessage() {
-            const input = document.getElementById("chat-input");
-            const chatWindow = document.getElementById("chat-window");
+        // Chatbot Functionality and Toggle
+const toggleBtn = document.getElementById("chat-toggle");
+const popup = document.getElementById("chat-popup");
+const sendBtn = document.getElementById("send-btn");
+const input = document.getElementById("user-input");
+const chatLog = document.getElementById("chat-log");
+const voiceBtn = document.getElementById("voice-btn");
+const typingIndicator = document.getElementById("typing-indicator");
+let voiceOutputEnabled = true;
 
-            const userMessage = input.value.trim();
-            if (!userMessage) return;
+toggleBtn.onclick = () => {
+    popup.classList.toggle("hidden");
+};
 
-            chatWindow.innerHTML += `<div class="mb-2"><strong>You:</strong> ${userMessage}</div>`;
-            input.value = "";
+// Voice control state
+let recognition;
+let recognizing = false;
 
-            const response = await fetch("{% url 'chatbot_response' %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": "{{ csrf_token }}"
-                },
-                body: JSON.stringify({ message: userMessage })
-            });
+if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
 
-            const data = await response.json();
-            const botMessage = data.response || "Sorry, something went wrong.";
-            chatWindow.innerHTML += `<div class="mb-2"><strong>StudyBot:</strong> ${botMessage}</div>`;
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+    recognition.onstart = () => {
+        recognizing = true;
+        voiceBtn.classList.add("bg-blue-500", "text-white");
+        voiceBtn.textContent = "🛑"; // Indicates you can click to stop
+    };
+
+    recognition.onend = () => {
+        recognizing = false;
+        voiceBtn.classList.remove("bg-blue-500", "text-white");
+        voiceBtn.textContent = "🎤";
+    };
+
+    recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        recognition.stop();
+    };
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        input.value = transcript;
+        sendMessage();
+    };
+} else {
+    voiceBtn.disabled = true;
+    voiceBtn.title = "Voice input not supported in this browser";
+}
+
+// Toggle voice input
+voiceBtn.onclick = () => {
+    if (!recognition) return;
+    if (recognizing) {
+        recognition.stop();
+    } else {
+        recognition.start();
+    }
+};
+
+// Toggle switch for voice output
+document.getElementById("voice-toggle").addEventListener("change", function () {
+    voiceOutputEnabled = this.checked;
+    if (!this.checked) speechSynthesis.cancel();
+});
+
+sendBtn.onclick = sendMessage;
+input.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") sendMessage();
+});
+
+async function sendMessage() {
+    const userMessage = input.value.trim();
+    if (!userMessage) return;
+
+    chatLog.innerHTML += `
+        <div class="flex justify-end" role="article" aria-label="User message">
+            <div class="bg-green-100 text-gray-800 px-4 py-2 rounded-lg max-w-xs break-words">${escapeHtml(userMessage)}</div>
+        </div>`;
+    input.value = "";
+    chatLog.scrollTop = chatLog.scrollHeight;
+
+    typingIndicator.classList.remove("hidden");
+
+    try {
+        const response = await fetch("{% url 'chatbot_response' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken")
+            },
+            body: JSON.stringify({ message: userMessage })
+        });
+
+        const data = await response.json();
+        let botMessage = data.response || "Sorry, something went wrong.";
+
+        // Handle embedded base64 images
+        let imageHTML = '';
+        const imagePattern = /\[\[IMAGE:(.*?)\]\]/g;
+        let match;
+        while ((match = imagePattern.exec(botMessage)) !== null) {
+            const base64Image = match[1];
+            imageHTML += `<div class="mt-2"><img src="data:image/png;base64,${base64Image}" class="max-w-full border rounded shadow" alt="Equation Graph"/></div>`;
         }
+        botMessage = botMessage.replace(imagePattern, '');
+
+        // LaTeX rendering
+        const latexBlocks = botMessage.match(/\$\$.*?\$\$/gs);
+        let safeHTML = "";
+        if (latexBlocks) {
+            let parts = botMessage.split(/\$\$.*?\$\$/gs);
+            for (let i = 0; i < parts.length; i++) {
+                safeHTML += escapeHtml(parts[i]);
+                if (i < latexBlocks.length) {
+                    safeHTML += latexBlocks[i];
+                }
+            }
+        } else {
+            safeHTML = escapeHtml(botMessage);
+        }
+
+        chatLog.innerHTML += `
+            <div class="flex justify-start" role="article" aria-label="StudyBot message">
+                <div class="bg-blue-100 text-gray-800 px-4 py-2 rounded-lg max-w-xs whitespace-pre-wrap break-words">
+                    ${safeHTML}
+                </div>
+            </div>
+            ${imageHTML}`;
+
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+
+        if (voiceOutputEnabled) {
+            speak(stripLatex(botMessage));
+        }
+    } catch (error) {
+        chatLog.innerHTML += `
+            <div class="flex justify-start text-sm text-red-600">Error fetching response.</div>`;
+    } finally {
+        typingIndicator.classList.add("hidden");
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function stripLatex(text) {
+    return text
+        .replace(/\$\$(.*?)\$\$/gs, '$1')
+        .replace(/\\(frac|sqrt|sum|int|left|right|begin|end|times|cdot|text|displaystyle)[^{]*{([^}]*)}/g, '$2')
+        .replace(/\\[a-zA-Z]+/g, '')
+        .replace(/[\{\}]/g, '')
+        .replace(/_/g, ' ')
+        .replace(/\^/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function speak(text) {
+    if (!('speechSynthesis' in window)) return;
+
+    speechSynthesis.cancel(); // Stop any ongoing speech
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    speechSynthesis.speak(utterance);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
     </script>
 </body>
 

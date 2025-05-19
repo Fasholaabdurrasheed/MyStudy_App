@@ -13,6 +13,8 @@ urlpatterns = [
     path('profile/', profile_view, name='profile'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
     path('login/', LoginView.as_view(template_name='users/login.html'), name='login'),
+    path('create/', views.create_live_class, name='create_live_class'),
+    path('live/', views.live_classes_list, name='live_classes'),
     # PASSWORD RESET
     path("password/change/", views.password_change, name="password_change"),
     path("password/reset/", views.password_reset_request, name="password_reset"),

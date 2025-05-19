@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login, authenticate
-from django.contrib.auth.decorators import login_required
-from .models import GPASemester, CourseGrade
-from .forms import GPASemesterForm, CourseGradeForm, PasswordChangeForm, PasswordResetRequestForm, PasswordResetConfirmForm, CustomUserCreationForm, UserProfileForm
+from django.contrib.auth.decorators import login_required, user_passes_test
+from .models import GPASemester, CourseGrade, LiveClass
+from .forms import GPASemesterForm, CourseGradeForm, PasswordChangeForm, PasswordResetRequestForm, PasswordResetConfirmForm, CustomUserCreationForm, UserProfileForm, LiveClassForm
 from django.forms import modelformset_factory
 import plotly.graph_objects as go
 import plotly
@@ -17,7 +17,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.conf import settings
-from django.core.mail import send_mail
+from django.utils import timezone
 
 def signup_view(request):
     if request.method == 'POST':
@@ -133,32 +133,55 @@ def password_reset_request(request):
         form = PasswordResetRequestForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
-            user = User.objects.get(email=email)
-            token_generator = PasswordResetTokenGenerator()
-            token = token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_url = request.build_absolute_uri(
-                f"/users/reset/{uid}/{token}/"
-            )
-            subject = "Password Reset Request"
-            message = render_to_string(
-                "users/password_reset_email.html",
-                {
-                    "user": user,
-                    "reset_url": reset_url,
-                },
-            )
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
-            messages.success(
-                request, "A password reset link has been sent to your email."
-            )
-            return redirect("login")
+            try:
+                user = User.objects.get(email=email)
+                token_generator = PasswordResetTokenGenerator()
+                token = token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                reset_url = request.build_absolute_uri(
+                    f"/users/reset/{uid}/{token}/"
+                )
+                subject = "Password Reset Request - MyStudy App"
+                # Render HTML email
+                html_message = render_to_string(
+                    "registration/password_reset_email.html",
+                    {
+                        "user": user,
+                        "protocol": "https" if request.is_secure() else "http",
+                        "domain": request.get_host(),
+                        "uid": uid,
+                        "token": token,
+                        "password_reset_timeout": 24,  # Adjust based on your settings
+                    },
+                )
+                # Render plain text fallback
+                plain_message = render_to_string(
+                    "registration/password_reset_email.txt",
+                    {
+                        "user": user,
+                        "protocol": "https" if request.is_secure() else "http",
+                        "domain": request.get_host(),
+                        "uid": uid,
+                        "token": token,
+                        "password_reset_timeout": 24,
+                    },
+                )
+                send_mail(
+                    subject=subject,
+                    message=plain_message,
+                    html_message=html_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+                messages.success(
+                    request, "A password reset link has been sent to your email."
+                )
+                return redirect("login")
+            except User.DoesNotExist:
+                messages.error(request, "No user found with this email address.")
+            except Exception as e:
+                messages.error(request, f"Failed to send email: {e}")
         else:
             messages.error(request, "Please correct the errors below.")
     else:
@@ -189,3 +212,60 @@ def password_reset_confirm(request, uidb64, token):
     else:
         messages.error(request, "The password reset link is invalid or has expired.")
         return redirect("users:password_reset")
+
+def is_teacher(user):
+    return user.is_staff
+
+@login_required
+@user_passes_test(is_teacher)
+def create_live_class(request):
+    if request.method == 'POST':
+        form = LiveClassForm(request.POST)
+        if form.is_valid():
+            live_class = form.save(commit=False)
+            live_class.teacher = request.user
+            live_class.save()
+            try:
+                students = User.objects.filter(is_staff=False)
+                recipient_list = [student.email for student in students if student.email]
+                if recipient_list:
+                    for student in students:
+                        if student.email:
+                            html_message = render_to_string('emails/live_class_notification.html', {
+                                'recipient_name': student.get_full_name() or student.username,
+                                'class_title': live_class.title,
+                                'scheduled_at': live_class.scheduled_at,
+                                'meet_link': live_class.meet_link,
+                                'subject': f'New Live Class: {live_class.title}',
+                            })
+                            plain_message = render_to_string('emails/live_class_notification.txt', {
+                                'recipient_name': student.get_full_name() or student.username,
+                                'class_title': live_class.title,
+                                'scheduled_at': live_class.scheduled_at,
+                                'meet_link': live_class.meet_link,
+                            })
+                            send_mail(
+                                subject=f'New Live Class: {live_class.title}',
+                                message=plain_message,
+                                html_message=html_message,
+                                from_email='mystudyapp.unilorin@gmail.com',
+                                recipient_list=[student.email],
+                                fail_silently=False,
+                            )
+                    messages.success(request, 'Live class created and students notified.')
+                else:
+                    messages.warning(request, 'Live class created, but no students with valid emails found.')
+            except Exception as e:
+                messages.error(request, f'Live class created, but failed to send email: {e}')
+            return redirect('users:live_classes')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = LiveClassForm()
+    return render(request, 'users/create_live_class.html', {'form': form})
+@login_required
+def live_classes_list(request):
+    classes = LiveClass.objects.all().order_by('scheduled_at')
+    if not request.user.is_staff:  # Students see only upcoming/live classes
+        classes = classes.filter(scheduled_at__gte=timezone.now() - timezone.timedelta(hours=1))
+    return render(request, 'users/live_classes.html', {'classes': classes})

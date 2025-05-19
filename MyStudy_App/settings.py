@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 from decouple import config
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,16 +21,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-zrbhm*=etbpe83-(_ckn9tr#(gum$)u8_2m-8=tl_xlh-foa*p'
+SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = [
-    'localhost', '127.0.0.1', '192.168.219.1','192.168.23.1',
-]
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=lambda v: [s.strip() for s in v.split(',')])
 
-import os
+
+
 # from dotenv import load_dotenv
 # load_dotenv()
 
@@ -99,8 +99,8 @@ WSGI_APPLICATION = 'MyStudy_App.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': config('DB_ENGINE', default='django.db.backends.sqlite3'),
+        'NAME': config('DB_NAME', default=os.path.join(BASE_DIR, 'db.sqlite3')),
     }
 }
 
@@ -139,9 +139,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [BASE_DIR / "theme" / "static"]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -150,16 +150,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Redirect URL after login
-LOGIN_REDIRECT_URL = '/exams/join-course/'  # Redirect to the my_courses view after login
+from django.urls import reverse_lazy
+LOGIN_REDIRECT_URL = reverse_lazy('home')  # Redirect to the my_courses view after login
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 TAILWIND_APP_NAME = 'theme'
 TAILWIND_CSS_PATH = 'static/css/tailwind.css'
 INTERNAL_IPS = ['127.0.0.1']  # for live reload
-NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
+NPM_BIN_PATH = config('NPM_BIN_PATH', default=None)
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Console output for testing
-DEFAULT_FROM_EMAIL = 'mystudyapp.unilorin@gmail.com'
+DEFAULT_FROM_EMAIL = "MyStudy App <mystudyapp.unilorin@gmail.com>"
 # For production, use SMTP (example with Gmail):
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
@@ -167,3 +168,4 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+

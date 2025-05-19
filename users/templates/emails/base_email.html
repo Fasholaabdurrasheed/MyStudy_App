@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ subject }}</title>
+  <style>
+    /* Reset styles */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; line-height: 1.6; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .header { background: #1e40af; padding: 20px; text-align: center; }
+    .header img { max-width: 150px; height: auto; }
+    .header h1 { color: #ffffff; font-size: 24px; margin-top: 10px; }
+    .content { padding: 30px; color: #333333; }
+    .content h2 { font-size: 20px; margin-bottom: 15px; }
+    .content p { margin-bottom: 20px; font-size: 16px; }
+    .button { display: inline-block; padding: 12px 24px; background: #1e40af; color: #ffffff !important; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 16px; margin: 10px 0; }
+    .button:hover { background: #1e3a8a; }
+    .details { background: #f9fafb; padding: 15px; border-radius: 4px; margin-top: 20px; }
+    .details p { margin: 5px 0; font-size: 14px; }
+    .footer { background: #f4f4f4; padding: 20px; text-align: center; font-size: 14px; color: #666666; }
+    .footer a { color: #1e40af; text-decoration: none; }
+    /* Responsive design */
+    @media only screen and (max-width: 600px) {
+      .container { margin: 10px; }
+      .header h1 { font-size: 20px; }
+      .content { padding: 20px; }
+      .content h2 { font-size: 18px; }
+      .content p { font-size: 14px; }
+      .button { padding: 10px 20px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <!-- Replace with your logo URL or remove if no logo -->
+      <img src="https://via.placeholder.com/150x50?text=MyStudy+App" alt="MyStudy App Logo">
+      <h1>{{ subject }}</h1>
+    </div>
+    <div class="content">
+      {% block content %}
+      {% endblock %}
+    </div>
+    <div class="footer">
+      <p>Thank you for using MyStudy App!</p>
+      <p>If you have any questions, contact us at <a href="mailto:support@mystudyapp.com">support@mystudyapp.com</a>.</p>
+      <p>&copy; {% now "Y" %} MyStudy App. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
