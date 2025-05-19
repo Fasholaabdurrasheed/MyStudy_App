@@ -145,6 +145,8 @@ training_data = [
     "William Shakespeare wrote Hamlet.",
     "Who wrote Romeo and Juliet?",
     "William Shakespeare wrote Romeo and Juliet.",
+    "what is python?",
+    "Python is a high-level, interpreted programming language known for its readability and versatility.",
     "What is quantum mechanics?",
     "Quantum mechanics is a fundamental theory in physics that describes the behavior of matter and energy on microscopic scales, such as atoms and subatomic particles."
 ]

@@ -3,7 +3,6 @@ from .models import CourseExam, CourseQuestion, CourseAnswer, CourseExamAttempt,
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template.loader import render_to_string, get_template
-from xhtml2pdf import pisa
 import random
 from django.utils import timezone
 from django.utils.timezone import now
@@ -23,7 +22,6 @@ from django.db.models import Max, Q, Count, Avg
 from django.http import JsonResponse
 import json
 import pandas as pd
-import openpyxl
 from django.views.decorators.http import require_POST
 
 
@@ -728,6 +726,7 @@ def custom_admin_dashboard(request):
 
 @login_required
 def download_result_pdf(request, exam_id):
+    from xhtml2pdf import pisa
     exam = get_object_or_404(CourseExam, id=exam_id)
     submission = get_object_or_404(ExamSubmission, exam=exam, user=request.user)
 
@@ -754,6 +753,7 @@ def leaderboard(request, exam_id):
     }
     return render(request, 'exams/leaderboard.html', context)
 def export_leaderboard_pdf(request):
+    from xhtml2pdf import pisa
     attempts = CourseExamAttempt.objects.select_related('user', 'exam').order_by('-score')
     template_path = 'exams/leaderboard_pdf.html'
     context = {'attempts': attempts}
@@ -768,6 +768,7 @@ def export_leaderboard_pdf(request):
     return response
 
 def export_course_attempts_excel(request):
+    import openpyxl
     attempts = CourseExamAttempt.objects.select_related('student', 'exam')
 
     wb = openpyxl.Workbook()
@@ -787,5 +788,3 @@ def export_course_attempts_excel(request):
     response['Content-Disposition'] = 'attachment; filename=course_exam_attempts.xlsx'
     wb.save(response)
     return response
-def health_check(request):
-    return HttpResponse("App is working!")

@@ -1,3 +1,4 @@
+# equation_solver_adapter.py
 from chatterbot.logic import LogicAdapter
 from chatterbot.conversation import Statement
 
@@ -98,10 +99,9 @@ class EquationSolverAdapter(LogicAdapter):
                     confidence = 0.1
 
                 response_text = "\n\n".join(steps)
-                # Include LaTeX in a separate key or as part of response for frontend rendering
                 response_text += "\n\n---\nLaTeX format (for rendering):\n" + "\n".join(steps_latex)
 
-                # Plot graph if single variable and solution found
+                # Plot graph if single variable
                 if len(sympy_vars) == 1 and solution and confidence > 0.5:
                     try:
                         x = sympy_vars[0]
@@ -111,7 +111,7 @@ class EquationSolverAdapter(LogicAdapter):
                         p.save(buf)
                         buf.seek(0)
                         encoded_plot = base64.b64encode(buf.read()).decode('utf-8')
-                        response_text += "\n\n🖼️ Graph available (base64 encoded)."
+                        response_text += "\n\n🖼️ Graph image (base64):\n" + encoded_plot
                     except Exception:
                         response_text += "\n(Graphing failed)"
 

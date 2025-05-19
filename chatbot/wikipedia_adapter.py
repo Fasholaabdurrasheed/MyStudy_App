@@ -1,8 +1,8 @@
+# wikipedia_adapter.py
 from chatterbot.logic import LogicAdapter
 from chatterbot.conversation import Statement
 import wikipedia
 import re
-from bs4 import BeautifulSoup
 
 class WikipediaAdapter(LogicAdapter):
     def __init__(self, chatbot, **kwargs):
@@ -24,13 +24,13 @@ class WikipediaAdapter(LogicAdapter):
         try:
             # Extract and normalize query (e.g., "what is python" -> "Python")
             query = re.sub(r'^(what is|who is|where is|when did)\s+', '', text).strip()
-            query = query.title()  # Capitalize for Wikipedia
+            query = query.title()
             if not query:
                 response_text = "Please provide a specific topic to look up."
                 confidence = 0.1
             else:
                 # Fetch Wikipedia summary (limit to 2 sentences)
-                summary = wikipedia.summary(query, sentences=2, auto_suggest=True, parser='lxml')
+                summary = wikipedia.summary(query, sentences=2, auto_suggest=True)
                 response_text = summary
                 confidence = 0.9
         except wikipedia.exceptions.DisambiguationError as e:

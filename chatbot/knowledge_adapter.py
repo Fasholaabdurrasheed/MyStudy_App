@@ -19,7 +19,7 @@ class KnowledgeAdapter(LogicAdapter):
             r"what is the theory of relativity": "The theory of relativity, developed by Albert Einstein, includes special relativity and general relativity, describing the relationship between space, time, and gravity."
         }
 
-    def can_process(self, statement):
+    def can_process(self, statement, **kwargs):
         text = statement.text.lower()
         # Exclude math-related queries
         if re.search(r'\d+\s*[\+\-\*/=]\s*\d+', text) or 'solve' in text:
