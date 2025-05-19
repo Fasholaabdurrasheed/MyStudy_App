@@ -9,9 +9,6 @@ from .equation_solver_adapter import EquationSolverAdapter
 from .knowledge_adapter import KnowledgeAdapter
 from .wikipedia_adapter import WikipediaAdapter
 from sympy import symbols, Eq, solve, sympify
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import base64
 import io
 import traceback
@@ -158,6 +155,10 @@ print(f"Number of trained statements: {chatbot.storage.count()}")
 
 # 🧮 Solve equation and return HTML image of the plot
 def solve_equation_with_plot(equation_str):
+    
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
     try:
         equation_str = insert_multiplication_symbols(equation_str)
         lhs_str, rhs_str = equation_str.split('=')

@@ -4,6 +4,9 @@ from sympy import symbols, Eq, solve, pretty, simplify, sin, cos, tan, ln, sqrt,
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, implicit_multiplication_application
 )
+import matplotlib
+matplotlib.use('Agg')
+
 from sympy.plotting import plot
 from sympy.printing.latex import latex
 import re
