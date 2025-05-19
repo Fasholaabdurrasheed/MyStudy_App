@@ -1,6 +1,6 @@
 from chatterbot.logic import LogicAdapter
 from chatterbot.conversation import Statement
-from sympy import symbols, Eq, solve, pretty, simplify, sin, cos, tan, ln, sqrt, exp, factor, expand
+
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, implicit_multiplication_application
 )
@@ -23,6 +23,7 @@ class EquationSolverAdapter(LogicAdapter):
         return '=' in text or re.match(r'^\s*\d+\s*[\+\-\*/]\s*\d+\s*$', text)
 
     def process(self, statement, additional_response_selection_parameters=None):
+        from sympy import symbols, Eq, solve, pretty, simplify, sin, cos, tan, ln, sqrt, exp, factor, expand
         text = statement.text.lower()
         text = text.replace("solve", "").strip()
         text = text.replace('^', '**')

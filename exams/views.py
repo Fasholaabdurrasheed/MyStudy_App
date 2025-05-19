@@ -787,3 +787,5 @@ def export_course_attempts_excel(request):
     response['Content-Disposition'] = 'attachment; filename=course_exam_attempts.xlsx'
     wb.save(response)
     return response
+def health_check(request):
+    return HttpResponse("App is working!")

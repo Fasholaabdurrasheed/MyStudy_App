@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 # from exams import views as exam_views
 from exams import views
+from exams.views import health_check
 
 
 
@@ -36,7 +37,8 @@ urlpatterns = [
     path('inbox/<int:user_id>/', views.view_message, name='view_message'),
     # path('messages/', include('messaging.urls')),
     # path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('bot/', include('chatbot.urls')),
+    # path('bot/', include('chatbot.urls')),
+    path('', health_check),
      
 
 ]

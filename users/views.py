@@ -269,3 +269,4 @@ def live_classes_list(request):
     if not request.user.is_staff:  # Students see only upcoming/live classes
         classes = classes.filter(scheduled_at__gte=timezone.now() - timezone.timedelta(hours=1))
     return render(request, 'users/live_classes.html', {'classes': classes})
+
