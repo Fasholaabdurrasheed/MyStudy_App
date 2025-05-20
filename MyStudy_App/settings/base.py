@@ -8,7 +8,6 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=True, cast=bool)  # temporary, will be overridden
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv())
 
-OPENAI_API_KEY = config("OPENAI_API_KEY")
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -63,13 +62,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'MyStudy_App.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': config('DB_ENGINE', default='django.db.backends.sqlite3'),
-        'NAME': config('DB_NAME', default=os.path.join(BASE_DIR, 'db.sqlite3')),
-    }
-}
+import dj_database_url
 
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL')
+    )
+}
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},

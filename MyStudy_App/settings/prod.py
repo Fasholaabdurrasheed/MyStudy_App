@@ -17,3 +17,5 @@ X_FRAME_OPTIONS = 'DENY'
 
 # Admin email
 ADMINS = [('Admin', 'mystudyapp.unilorin@gmail.com')]
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

@@ -33,7 +33,6 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 # from dotenv import load_dotenv
 # load_dotenv()
 
-OPENAI_API_KEY = config("OPENAI_API_KEY")
 
 # Add these if not already there:MEDIA_URL = '/media/'
 MEDIA_URL = '/media/'
@@ -98,11 +97,12 @@ WSGI_APPLICATION = 'MyStudy_App.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+import dj_database_url
+
 DATABASES = {
-    'default': {
-        'ENGINE': config('DB_ENGINE', default='django.db.backends.sqlite3'),
-        'NAME': config('DB_NAME', default=os.path.join(BASE_DIR, 'db.sqlite3')),
-    }
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL')
+    )
 }
 
 
@@ -143,6 +143,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "theme" / "static"]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
