@@ -28,8 +28,6 @@ DEBUG = config("DEBUG", default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
-
-
 # from dotenv import load_dotenv
 # load_dotenv()
 
@@ -99,10 +97,18 @@ WSGI_APPLICATION = 'MyStudy_App.wsgi.application'
 
 import dj_database_url
 
+import dj_database_url
+from decouple import config
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL')
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'my_study_app_2_db',
+        'USER': 'mystudy_db_user',
+        'PASSWORD': 'LcKzDJzBrrAwethfBsR9e49PGZIg3EgX',
+        'HOST': 'dpg-d0m4snqdbo4c73cgcsag-a.virginia-postgres.render.com',
+        'PORT': '5432',
+    }
 }
 
 
