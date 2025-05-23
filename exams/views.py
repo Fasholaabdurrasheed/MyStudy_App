@@ -769,22 +769,27 @@ def export_leaderboard_pdf(request):
 
 def export_course_attempts_excel(request):
     import openpyxl
-    attempts = CourseExamAttempt.objects.select_related('student', 'exam')
+    from django.http import HttpResponse
 
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Exam Attempts"
-    ws.append(['Student', 'Exam', 'Score', 'Submitted At'])
+    try:
+        attempts = CourseExamAttempt.objects.select_related('user', 'exam')
 
-    for attempt in attempts:
-        ws.append([
-            attempt.student.username,
-            attempt.exam.title,
-            attempt.score,
-            attempt.submitted_at.strftime('%Y-%m-%d %H:%M')
-        ])
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Exam Attempts"
+        ws.append(['Student', 'Exam', 'Score', 'Completed At'])  # Updated header
 
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename=course_exam_attempts.xlsx'
-    wb.save(response)
-    return response
+        for attempt in attempts:
+            ws.append([
+                attempt.user.username if attempt.user else 'N/A',
+                attempt.exam.name if attempt.exam else 'N/A',  # Use exam.name (model has name, not title)
+                attempt.score if attempt.score is not None else 'N/A',
+                attempt.completed_at.strftime('%Y-%m-%d %H:%M') if attempt.completed_at else 'N/A'  # Use completed_at
+            ])
+
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=course_exam_attempts.xlsx'
+        wb.save(response)
+        return response
+    except Exception as e:
+        return HttpResponse(f"Error generating Excel file: {str(e)}", status=500)
