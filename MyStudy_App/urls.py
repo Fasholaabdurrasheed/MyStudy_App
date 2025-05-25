@@ -41,8 +41,17 @@ urlpatterns = [
 
 ]
 
+# project-level urls.py
 from django.conf import settings
-from django.conf.urls.static import static
-# Only add this in development
+from django.urls import re_path
+from exams.views import serve_media  # adjust path if needed
+
 if settings.DEBUG:
+    # For development: serve using Django's static() helper
+    from django.conf.urls.static import static
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # For production: custom view to serve media files
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve_media),
+    ]
