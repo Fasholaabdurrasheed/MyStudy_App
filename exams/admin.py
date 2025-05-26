@@ -1,6 +1,6 @@
 from django import forms
 from .models import Faculty, Department, Course, CourseEnrollment, CourseMaterial, Material
-from .models import CourseExam, CourseQuestion, CourseAnswer, CourseExamAttempt, Message, CourseEnrollment
+from .models import CourseExam, CourseQuestion, CourseAnswer, CourseExamAttempt, Message, CourseEnrollment, PastQuestionFile
 import csv
 from io import TextIOWrapper
 from django.contrib import admin
@@ -80,6 +80,12 @@ class CourseEnrollmentAdmin(admin.ModelAdmin):
     list_display = ('user', 'course', 'enrolled_at')  # corrected field name
     search_fields = ('user__username', 'course__name')
     list_filter = ('course',)  
+
+@admin.register(PastQuestionFile)
+class PastQuestionFileAdmin(admin.ModelAdmin):
+    list_display = ('course', 'title', 'exam_type', 'year', 'uploaded_at')
+    list_filter = ('exam_type', 'year', 'course')
+    search_fields = ('title', 'course__name')
 
 admin.site.site_header = "MyStudy_App Administration"
 admin.site.site_title = "MyStudy_App Admin Portal"
